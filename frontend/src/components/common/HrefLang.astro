@@ -1,0 +1,55 @@
+---
+/**
+ * HrefLang Component for Multi-language SEO
+ * 
+ * Adds <link rel="alternate" hreflang="..."> tags for search engines.
+ * This tells Google/Bing which language versions of a page exist.
+ * 
+ * Example output:
+ * <link rel="alternate" hreflang="en" href="https://kgr33n.com/en/about" />
+ * <link rel="alternate" hreflang="pl" href="https://kgr33n.com/pl/about" />
+ * <link rel="alternate" hreflang="x-default" href="https://kgr33n.com/en/about" />
+ */
+
+import { SITE } from 'astrowind:config';
+import { languages, defaultLang } from '~/i18n';
+
+const currentPath = Astro.url.pathname;
+const siteUrl = SITE.site || 'https://kgr33n.com';
+
+// Extract the path without language prefix
+// /en/about -> /about
+// /pl/contact -> /contact
+// /en -> /
+function getPathWithoutLang(path: string): string {
+  for (const lang of Object.keys(languages)) {
+    if (path === `/${lang}` || path === `/${lang}/`) {
+      return '/';
+    }
+    if (path.startsWith(`/${lang}/`)) {
+      return path.slice(lang.length + 1);
+    }
+  }
+  return path;
+}
+
+const pathWithoutLang = getPathWithoutLang(currentPath);
+
+// Generate URLs for all languages
+const alternateUrls = Object.keys(languages).map(lang => ({
+  lang,
+  url: `${siteUrl}/${lang}${pathWithoutLang === '/' ? '' : pathWithoutLang}`
+}));
+---
+
+{/* Language alternate links for SEO */}
+{alternateUrls.map(({ lang, url }) => (
+  <link rel="alternate" hreflang={lang} href={url} />
+))}
+
+{/* x-default for language selection pages or default language */}
+<link 
+  rel="alternate" 
+  hreflang="x-default" 
+  href={`${siteUrl}/${defaultLang}${pathWithoutLang === '/' ? '' : pathWithoutLang}`} 
+/>

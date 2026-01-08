@@ -1,0 +1,177 @@
+# =============================================================================
+# NETWORK POLICIES - Internal Kubernetes Firewall
+# =============================================================================
+#
+# Network Policies control Pod-to-Pod and external communication.
+# They work like a firewall at the Pod network level.
+#
+# IMPORTANT: K3s uses Flannel CNI which does NOT support NetworkPolicy by default!
+# To enable, you need to:
+# 1. Install Calico or Cilium CNI instead of Flannel, OR
+# 2. Use K3s with --flannel-backend=none and install your own CNI
+#
+# For production, consider using Cilium which provides advanced network policies.
+#
+# =============================================================================
+
+---
+# =============================================================================
+# DEFAULT DENY - Block all traffic by default
+# =============================================================================
+# Start with "deny all" and then explicitly allow what's needed
+# This is the "zero trust" approach
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: kgr33n
+spec:
+  podSelector: {} # Applies to ALL pods in namespace
+  policyTypes:
+    - Ingress
+    - Egress
+  # No ingress/egress rules = deny all
+
+---
+# =============================================================================
+# FRONTEND - Allow traffic from Ingress only
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: kgr33n
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow traffic from Nginx Ingress Controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+---
+# =============================================================================
+# BACKEND - Allow traffic from Ingress only, can connect to Database
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: kgr33n
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow traffic from Nginx Ingress Controller (for /api routes)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    # Allow connection to Database
+    - to:
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow external HTTPS (for OAuth, external APIs, etc.)
+    # Comment out if backend doesn't need external access
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8 # Block internal IPs except allowed
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+
+---
+# =============================================================================
+# DATABASE - Allow traffic from Backend only (most restrictive!)
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-policy
+  namespace: kgr33n
+spec:
+  podSelector:
+    matchLabels:
+      app: database
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # ONLY Backend can connect to Database!
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 5432
+
+  egress:
+    # Database doesn't need to initiate connections
+    # Only DNS for hostname resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53

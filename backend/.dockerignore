@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv/
+ENV/
+.eggs
+*.egg-info
+.mypy_cache
+.pytest_cache
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker
+
+# Documentation
+*.md
+docs/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tests (optional - include if you want tests in prod)
+tests/
+*_test.py
+test_*.py
+
+# Scripts
+scripts/
+*.sh
+
+# Logs
+*.log
+logs/
+
+# Alembic versions (keep structure, but skip for build context)
+# alembic/versions/

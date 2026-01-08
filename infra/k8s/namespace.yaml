@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgr33n
+  labels:
+    app.kubernetes.io/name: kgr33n
+    app.kubernetes.io/managed-by: kubectl

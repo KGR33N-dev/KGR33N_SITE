@@ -1,0 +1,65 @@
+# =============================================================================
+# HORIZONTAL POD AUTOSCALER - Backend
+# =============================================================================
+#
+# HPA automatically scales the number of pods based on CPU/memory usage.
+#
+# CURRENT CONFIGURATION (t3.micro - 1GB RAM):
+# - min/max: 1 replica (no scaling due to RAM constraints)
+# - This is effectively disabled but ready for future scaling
+#
+# UPGRADE PATH:
+# t3.micro  (1GB):  minReplicas: 1, maxReplicas: 1  (current)
+# t3.small  (2GB):  minReplicas: 2, maxReplicas: 3
+# t3.medium (4GB):  minReplicas: 2, maxReplicas: 5
+#
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: kgr33n
+  labels:
+    app: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+
+  # For t3.micro (1GB RAM) - effectively disabled
+  # Change these values when upgrading instance type
+  minReplicas: 1
+  maxReplicas: 1
+
+  metrics:
+    # Scale based on CPU utilization
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70 # Scale up when CPU > 70%
+
+    # Scale based on memory utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80 # Scale up when memory > 80%
+
+  # Behavior controls how fast scaling happens
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300 # Wait 5min before scaling down
+      policies:
+        - type: Percent
+          value: 50 # Scale down max 50% at a time
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60 # Wait 1min before scaling up
+      policies:
+        - type: Pods
+          value: 2 # Add max 2 pods at a time
+          periodSeconds: 60

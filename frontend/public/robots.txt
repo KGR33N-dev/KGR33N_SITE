@@ -1,0 +1,23 @@
+# =============================================================================
+# ROBOTS.TXT - Search Engine Crawler Rules
+# =============================================================================
+# More info: https://developers.google.com/search/docs/crawling-indexing/robots/intro
+# =============================================================================
+
+User-agent: *
+Allow: /
+
+# Disallow private/user pages from indexing
+Disallow: /admin/
+Disallow: /account/
+Disallow: /verify-email/
+Disallow: /reset-password/
+Disallow: /forgot-password/
+Disallow: /api/
+
+# Disallow error pages
+Disallow: /*/403
+Disallow: /*/404
+
+# Sitemap location - IMPORTANT for SEO!
+Sitemap: https://kgr33n.com/sitemap-index.xml

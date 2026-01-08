@@ -1,0 +1,52 @@
+# =============================================================================
+# TERRAFORM VARIABLES - EXAMPLE
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# NEVER commit terraform.tfvars to git!
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# PROJECT
+# -----------------------------------------------------------------------------
+project_name = "kgr33n"
+environment  = "production"
+
+# -----------------------------------------------------------------------------
+# AWS
+# -----------------------------------------------------------------------------
+aws_region = "eu-central-1" # Frankfurt
+
+# EC2 Instance Type:
+# - t3.micro  = 2 vCPU, 1GB RAM (~$0/month)   - FREE TIER for 1 year!
+# - t3.small  = 2 vCPU, 2GB RAM (~$15/month)  - If you need more RAM
+# - t3.medium = 2 vCPU, 4GB RAM (~$30/month)  - High traffic production
+ec2_instance_type = "t3.micro"
+ec2_volume_size   = 30 # GB
+
+# SSH public key - generate with: ssh-keygen -t ed25519 -C "kgr33n-deployer"
+# Paste the contents of ~/.ssh/id_ed25519.pub here
+ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... your-email@example.com"
+
+# SECURITY: Restrict SSH access to your IP only!
+# Find your IP: curl ifconfig.me
+# ssh_allowed_cidr = ["YOUR_IP/32"]
+ssh_allowed_cidr = ["0.0.0.0/0"] # WARNING: Open to all - change this!
+
+# -----------------------------------------------------------------------------
+# CLOUDFLARE
+# -----------------------------------------------------------------------------
+# Get API token from: https://dash.cloudflare.com/profile/api-tokens
+# Required permissions: Zone:Zone:Read, Zone:DNS:Edit
+cloudflare_api_token = "your-cloudflare-api-token"
+
+# Get Zone ID from: Cloudflare Dashboard → Your Domain → Overview (right sidebar)
+cloudflare_zone_id = "your-zone-id"
+
+# Your domain name
+domain = "kgr33n.com"
+
+# Enable Cloudflare proxy (orange cloud) for DDoS protection and CDN
+# Set to false if you want DNS-only mode
+cloudflare_proxy_enabled = true

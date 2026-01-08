@@ -1,0 +1,40 @@
+# Kustomization - enables easy deployment with single command
+# Usage: kubectl apply -k infra/k8s/
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kgr33n
+
+resources:
+  - namespace.yaml
+  # Database (deploy first)
+  - database/pvc.yaml
+  - database/statefulset.yaml
+  - database/service.yaml
+  # Backend
+  - backend/deployment.yaml
+  - backend/service.yaml
+  - backend/hpa.yaml
+  # Frontend
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  # Ingress (deploy last)
+  - ingress/ingress.yaml
+  - ingress/nginx-config.yaml
+  # Security - Network Policies (optional, requires CNI support)
+  # Uncomment when using Calico or Cilium CNI instead of Flannel
+  # - network-policies.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: kgr33n
+
+# Image tags can be overridden with:
+# kustomize edit set image ghcr.io/kgr33n/kgr33n-backend:v1.2.3
+images:
+  - name: ghcr.io/kgr33n/kgr33n-backend
+    newTag: latest
+  - name: ghcr.io/kgr33n/kgr33n-frontend
+    newTag: latest

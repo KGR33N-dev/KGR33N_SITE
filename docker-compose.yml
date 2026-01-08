@@ -1,0 +1,117 @@
+# =============================================================================
+# DOCKER COMPOSE - LOCAL DEVELOPMENT
+# =============================================================================
+#
+# This file is for LOCAL DEVELOPMENT ONLY.
+# Production uses Kubernetes (K3s) - see infra/k8s/
+#
+# Usage:
+#   ./scripts/dev.sh          # Start all services
+#   ./scripts/dev.sh down     # Stop all services
+#   ./scripts/dev.sh logs     # View logs
+#   ./scripts/dev.sh shell    # Enter backend container
+#
+# Or manually:
+#   docker-compose up --build
+#   docker-compose down -v
+#
+# =============================================================================
+
+services:
+  # ============================================
+  # DATABASE
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: kgr33n-postgres
+    environment:
+      POSTGRES_DB: kgr33n_dev
+      POSTGRES_USER: kgr33n
+      POSTGRES_PASSWORD: dev_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kgr33n -d kgr33n_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ============================================
+  # BACKEND API (FastAPI)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kgr33n-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://kgr33n:dev_password_123@postgres:5432/kgr33n_dev
+      - SECRET_KEY=dev-secret-key-not-for-production-change-me
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - FRONTEND_URL=http://localhost:4321
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Note: For hot-reload in dev, you can run backend directly with:
+    #   cd backend && python -m uvicorn app.main:app --reload --port 8080
+    # The Docker container uses the built-in code from the image
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ============================================
+  # FRONTEND (Astro + Nginx)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: kgr33n-frontend
+    ports:
+      - "4321:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ============================================
+  # OPTIONAL: Adminer (Database GUI)
+  # ============================================
+  # Uncomment to enable database admin UI at http://localhost:8081
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: kgr33n-adminer
+  #   ports:
+  #     - "8081:8080"
+  #   depends_on:
+  #     - postgres
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: kgr33n-postgres-data
+
+# =============================================================================
+# NETWORK (automatically created)
+# =============================================================================
+# All services are on the same network and can communicate using service names:
+#   - postgres:5432
+#   - backend:8080
+#   - frontend:80
+# =============================================================================
