@@ -1,0 +1,229 @@
+---
+export const prerender = true;
+
+import Layout from '~/layouts/PageLayout.astro';
+import { languages } from '~/i18n';
+import { useTranslations } from '~/i18n/utils';
+
+// Generate one static page per language - slug is handled client-side by JavaScript
+export function getStaticPaths() {
+  return Object.keys(languages).map(lang => ({
+    params: { lang, slug: undefined }
+  }));
+}
+
+const { lang } = Astro.params;
+const t = useTranslations(lang as keyof typeof languages);
+
+// Default metadata - will be updated client-side when post loads
+const metadata = {
+  title: t('blog.title'),
+  description: t('blog.description'),
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Loading State -->
+  <div id="blog-loading" class="min-h-screen flex items-center justify-center py-16">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p class="text-gray-600 dark:text-gray-400">{t('blog.loading')}</p>
+    </div>
+  </div>
+
+  <!-- Error State (hidden by default) -->
+  <div id="blog-error" class="hidden min-h-screen flex items-center justify-center py-16">
+    <div class="text-center max-w-md mx-auto px-4">
+      <div class="text-red-500 text-6xl mb-4">😕</div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('blog.errorTitle')}</h1>
+      <p id="error-message" class="text-gray-600 dark:text-gray-400 mb-6"></p>
+      <a href={`/${lang}/blog`} class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        {t('blog.backToBlog')}
+      </a>
+    </div>
+  </div>
+
+  <!-- Post Content Container (hidden until loaded) -->
+  <div id="blog-content" class="hidden">
+    <!-- Post will be rendered here by JavaScript -->
+  </div>
+
+  <!-- Comments Container -->
+  <div id="comments-container" class="hidden max-w-4xl mx-auto px-4 py-8">
+    <!-- Comments will be loaded here -->
+  </div>
+</Layout>
+
+<script define:vars={{ lang }}>
+  window.currentLang = lang;
+</script>
+
+<script>
+  import { API_URLS } from '~/config/api';
+  
+  interface Translation {
+    language_code: string;
+    title: string;
+    content: string;
+    excerpt?: string;
+    meta_title?: string;
+    meta_description?: string;
+  }
+  
+  interface Post {
+    id: number;
+    slug: string;
+    author?: string;
+    category?: string;
+    tags?: string[];
+    featured_image?: string;
+    is_published: boolean;
+    published_at?: string;
+    created_at: string;
+    updated_at?: string;
+    translations: Translation[];
+  }
+  
+  async function loadBlogPost() {
+    const loadingEl = document.getElementById('blog-loading');
+    const errorEl = document.getElementById('blog-error');
+    const contentEl = document.getElementById('blog-content');
+    const commentsEl = document.getElementById('comments-container');
+    const errorMsgEl = document.getElementById('error-message');
+    
+    // Extract slug from URL path
+    const pathParts = window.location.pathname.split('/');
+    const blogIndex = pathParts.findIndex(part => part === 'blog');
+    const slug = blogIndex !== -1 && pathParts[blogIndex + 1] ? pathParts[blogIndex + 1] : null;
+    const lang = (window as any).currentLang || 'en';
+    
+    console.log('📖 Loading blog post:', { slug, lang, path: window.location.pathname });
+    
+    if (!slug) {
+      // No slug - redirect to blog list
+      window.location.href = `/${lang}/blog`;
+      return;
+    }
+    
+    try {
+      // Fetch post from API
+      const response = await fetch(API_URLS.getAllPosts({ published: true, per_page: 100 }));
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const post = data.items?.find((p: Post) => p.slug === slug && p.is_published);
+      
+      if (!post) {
+        throw new Error('Post not found');
+      }
+      
+      // Find translation for current language
+      const translation = post.translations?.find((t: Translation) => t.language_code === lang) 
+        || post.translations?.[0];
+      
+      if (!translation) {
+        throw new Error('No translation available');
+      }
+      
+      // Update page title
+      document.title = translation.meta_title || translation.title;
+      
+      // Render post content
+      if (contentEl) {
+        contentEl.innerHTML = renderPost(post, translation, lang);
+        contentEl.classList.remove('hidden');
+      }
+      
+      // Show comments section
+      if (commentsEl) {
+        commentsEl.innerHTML = `<div id="comments-section" data-post-id="${post.id}" data-lang="${lang}"></div>`;
+        commentsEl.classList.remove('hidden');
+      }
+      
+      // Hide loading
+      if (loadingEl) loadingEl.classList.add('hidden');
+      
+    } catch (error) {
+      console.error('❌ Error loading post:', error);
+      
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (errorEl) errorEl.classList.remove('hidden');
+      if (errorMsgEl) errorMsgEl.textContent = error instanceof Error ? error.message : 'Unknown error';
+    }
+  }
+  
+  function renderPost(post: Post, translation: Translation, lang: string): string {
+    const formattedDate = post.published_at 
+      ? new Date(post.published_at).toLocaleDateString(lang === 'pl' ? 'pl-PL' : 'en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : '';
+    
+    return `
+      <article class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+          ${post.featured_image ? `
+            <img 
+              src="${post.featured_image}" 
+              alt="${translation.title}"
+              class="w-full h-64 md:h-96 object-cover rounded-xl mb-6"
+            />
+          ` : ''}
+          
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            ${translation.title}
+          </h1>
+          
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            ${post.author ? `<span>By ${post.author}</span>` : ''}
+            ${formattedDate ? `<span>${formattedDate}</span>` : ''}
+            ${post.category ? `
+              <a href="/${lang}/blog/category/${post.category}" class="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 rounded">
+                ${post.category}
+              </a>
+            ` : ''}
+          </div>
+        </header>
+        
+        <!-- Content -->
+        <div class="prose dark:prose-invert max-w-none">
+          ${translation.content}
+        </div>
+        
+        <!-- Tags -->
+        ${post.tags && post.tags.length > 0 ? `
+          <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap gap-2">
+              ${post.tags.map(tag => `
+                <a href="/${lang}/blog/tag/${tag}" class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  #${tag}
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <!-- Back to Blog -->
+        <div class="mt-8">
+          <a href="/${lang}/blog" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline">
+            ← Back to Blog
+          </a>
+        </div>
+      </article>
+    `;
+  }
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', loadBlogPost);
+  document.addEventListener('astro:page-load', loadBlogPost);
+</script>
