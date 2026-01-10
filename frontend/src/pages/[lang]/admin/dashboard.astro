@@ -59,193 +59,6 @@ const metadata = {
           </div>
         </div>
       </div>
-
-      <!-- Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div
-          class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-        >
-          <div class="flex items-center">
-            <div class="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <svg
-                class="w-6 h-6 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                ></path>
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("admin.totalPosts")}
-              </p>
-              <p
-                id="total-posts"
-                class="text-2xl font-bold text-gray-900 dark:text-white"
-              >
-                -
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-        >
-          <div class="flex items-center">
-            <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <svg
-                class="w-6 h-6 text-green-600 dark:text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("admin.publishedPosts")}
-              </p>
-              <p
-                id="published-posts"
-                class="text-2xl font-bold text-gray-900 dark:text-white"
-              >
-                -
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-        >
-          <div class="flex items-center">
-            <div class="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-              <svg
-                class="w-6 h-6 text-yellow-600 dark:text-yellow-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                ></path>
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("admin.draftPosts")}
-              </p>
-              <p
-                id="draft-posts"
-                class="text-2xl font-bold text-gray-900 dark:text-white"
-              >
-                -
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Quick Actions Panel -->
-        <div
-          class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700"
-        >
-          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {t("admin.actions")}
-            </h3>
-          </div>
-          <div class="p-6 space-y-4">
-            <button
-              id="languages-btn"
-              class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                ></path>
-              </svg>
-              {t("admin.manageLanguages")}
-            </button>
-
-            <button
-              id="settings-btn"
-              class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                ></path>
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-              {t("admin.settings")}
-            </button>
-          </div>
-        </div>
-
-        <!-- Draft Posts Panel -->
-        <div
-          class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700"
-        >
-          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {t("admin.draftPosts")}
-            </h3>
-          </div>
-          <div class="p-6">
-            <div id="draft-posts-list" class="space-y-4">
-              <!-- Draft posts will be loaded here dynamically -->
-              <div class="flex items-center justify-center py-8">
-                <div
-                  class="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-600"
-                >
-                </div>
-                <span class="ml-2 text-gray-600 dark:text-gray-400"
-                  >{t("admin.loadingDrafts")}</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- All Posts Management -->
       <div
         class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 mb-8"
@@ -256,24 +69,6 @@ const metadata = {
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             {t("admin.allPosts")}
           </h3>
-          <div class="flex space-x-2">
-            <select
-              id="filter-status"
-              class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-            >
-              <option value="all">{t("admin.allStatuses")}</option>
-              <option value="published">{t("admin.published")}</option>
-              <option value="draft">{t("admin.draft")}</option>
-            </select>
-            <select
-              id="filter-language"
-              class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-            >
-              <option value="all">{t("admin.allLanguages")}</option>
-              <option value="en">English</option>
-              <option value="pl">Polski</option>
-            </select>
-          </div>
         </div>
         <div class="p-6">
           <div id="all-posts-list" class="space-y-4">
@@ -365,5 +160,18 @@ const metadata = {
 </Layout>
 
 <script>
-  import "../../../scripts/auth/dashboardInit";
+  import { initDashboardPage } from "~/scripts/auth/dashboardInit";
+
+  // Initialize dashboard logic
+  const lang = window.location.pathname.split("/")[1] || "en";
+
+  // Use astro:page-load for View Transitions support, fallback to direct call
+  document.addEventListener("astro:page-load", () => initDashboardPage(lang));
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () =>
+      initDashboardPage(lang),
+    );
+  } else {
+    initDashboardPage(lang);
+  }
 </script>

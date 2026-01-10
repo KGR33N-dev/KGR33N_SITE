@@ -146,6 +146,7 @@ export class AdminAuth {
       // Call backend logout endpoint to clear HTTP-only cookies
       await fetch(API_URLS.logout(), {
         method: 'POST',
+        cache: 'no-store',
         credentials: 'include', // Important: include cookies
         headers: {
           'Content-Type': 'application/json',
@@ -172,6 +173,7 @@ export class AdminAuth {
 
     const response = await fetch(API_URLS.login(), {
       method: 'POST',
+      cache: 'no-store',
       credentials: 'include', // Important: include cookies for HTTP-only token setting
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -258,11 +260,16 @@ export class AdminAuth {
       }
 
       // Make initial request
+      // Make initial request
       let response = await fetch(API_URLS.me(), {
         method: 'GET',
+        cache: 'no-store',
         credentials: 'include', // Important: include HTTP-only cookies
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
 
@@ -450,6 +457,7 @@ export class AdminAuth {
   static async register(userData: RegisterRequest): Promise<RegisterResponse> {
     const response = await fetch(API_URLS.register(), {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -505,9 +513,13 @@ export class AdminAuth {
   static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
     const authOptions: RequestInit = {
       ...options,
+      cache: 'no-store',
       credentials: 'include', // Important: include HTTP-only cookies
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...options.headers,
       },
     };
@@ -651,6 +663,7 @@ export class AdminAuth {
   static async updateProfile(userData: Partial<User>): Promise<User> {
     const response = await fetch(API_URLS.updateProfile(), {
       method: 'PUT',
+      cache: 'no-store',
       credentials: 'include', // Important: include HTTP-only cookies
       headers: {
         'Content-Type': 'application/json'
@@ -675,6 +688,7 @@ export class AdminAuth {
   static async updatePassword(currentPassword: string, newPassword: string): Promise<void> {
     const response = await fetch(API_URLS.updatePassword(), {
       method: 'PUT',
+      cache: 'no-store',
       credentials: 'include', // Important: include HTTP-only cookies
       headers: {
         'Content-Type': 'application/json'
@@ -695,6 +709,7 @@ export class AdminAuth {
   static async deleteAccount(password: string): Promise<void> {
     const response = await fetch(API_URLS.deleteAccount(), {
       method: 'DELETE',
+      cache: 'no-store',
       credentials: 'include', // Important: include HTTP-only cookies
       headers: {
         'Content-Type': 'application/json'

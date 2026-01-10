@@ -9,7 +9,6 @@ import { initForgotPasswordPage } from '~/scripts/auth/forgotPasswordInit';
 import { initResetPasswordPage } from '~/scripts/auth/resetPasswordInit';
 import { initVerifyEmailPage } from '~/scripts/auth/verifyEmail';
 import { initDashboardPage } from '~/scripts/auth/dashboardInit';
-import { initCommentsPage } from '~/scripts/comments';
 
 interface PageInitializer {
   pattern: RegExp;
@@ -49,11 +48,8 @@ class AutoPageInitializer {
       init: initDashboardPage,
       name: 'dashboard'
     },
-    {
-      pattern: /^\/[a-z]{2}\/blog\/[a-zA-Z0-9-]+$/,
-      init: initCommentsPage,
-      name: 'comments'
-    },
+    // NOTE: Comments initialization is handled by Comments.astro component script
+    // No need to register it here to avoid double initialization
   ];
 
   private isInitialized = false;

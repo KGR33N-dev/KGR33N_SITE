@@ -100,7 +100,8 @@ export class EnhancedCommentsManager {
   private isInitialized: boolean = false;
   private isLoadingComments: boolean = false;
   private debouncedLikes: DebouncedLikes;
-  
+  private abortController: AbortController | null = null;
+
   // Pagination properties - now using server-side pagination
   private allComments: Comment[] = [];
   private commentsPerPage: number = 20; // API returns 20 comments per page
@@ -115,7 +116,7 @@ export class EnhancedCommentsManager {
     this.apiUrls = apiUrls;
     this.isDev = isDev;
     this.debouncedLikes = new DebouncedLikes();
-    
+
     if (import.meta.env.DEV) {
       if (import.meta.env.DEV) console.log('🚀 EnhancedCommentsManager constructor:', {
         postId: this.postId,
@@ -124,7 +125,7 @@ export class EnhancedCommentsManager {
         isDev: this.isDev
       });
     }
-    
+
     this.init();
   }
 
@@ -149,7 +150,7 @@ export class EnhancedCommentsManager {
 
   private async setup(): Promise<void> {
     if (this.isInitialized) return;
-    
+
     await this.initComments();
     this.setupEventListeners();
     this.isInitialized = true;
@@ -157,12 +158,12 @@ export class EnhancedCommentsManager {
 
   private async initComments(): Promise<void> {
     if (this.isDev) if (import.meta.env.DEV) console.log('🚀 Initializing enhanced comments system...');
-    
+
     // Check if required HTML elements exist
     const loginPrompt = document.getElementById('login-prompt');
     const commentForm = document.getElementById('comment-form');
     const commentsContainer = document.getElementById('comments-list');
-    
+
     if (this.isDev) {
       if (import.meta.env.DEV) console.log('🔍 Required HTML elements check:', {
         loginPrompt: !!loginPrompt,
@@ -170,19 +171,19 @@ export class EnhancedCommentsManager {
         commentsContainer: !!commentsContainer
       });
     }
-    
+
     if (!commentsContainer) {
       console.warn('⚠️ Comments container not found - skipping comments initialization');
       return;
     }
-    
+
     try {
       // Check auth but don't let it block comments loading
       await this.checkAuth();
-      
+
       // Always load comments regardless of auth status
       await this.loadComments();
-      
+
       if (this.isDev) if (import.meta.env.DEV) console.log('✅ Comments system initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize comments:', error);
@@ -200,7 +201,7 @@ export class EnhancedCommentsManager {
 
   private async checkAuth(): Promise<void> {
     if (import.meta.env.DEV) console.log('🔐 Checking authentication...');
-    
+
     try {
       // Use AdminAuth.verifyUser() to check session via HTTP-only cookies
       if (typeof AdminAuth !== 'undefined' && AdminAuth.verifyUser) {
@@ -241,7 +242,7 @@ export class EnhancedCommentsManager {
           errorText = response.statusText;
           if (import.meta.env.DEV) console.log('❌ Could not parse error response:', parseError);
         }
-        
+
         this.currentUser = null;
         if (import.meta.env.DEV) console.log(`ℹ️ User not authenticated - ${response.status}: ${errorText}`);
       }
@@ -280,20 +281,20 @@ export class EnhancedCommentsManager {
       } else if (this.isDev) {
         console.warn('⚠️ Login prompt element not found');
       }
-      
+
       if (commentForm) {
         commentForm.style.display = 'block';
         if (this.isDev) if (import.meta.env.DEV) console.log('✅ Shown comment form');
       } else if (this.isDev) {
         console.warn('⚠️ Comment form element not found');
       }
-      
+
       if (userAvatarLetter) {
-        const letter = this.currentUser.username ? 
-          this.currentUser.username.charAt(0).toUpperCase() : 
-          this.currentUser.email ? 
-          this.currentUser.email.charAt(0).toUpperCase() : 
-          'U';
+        const letter = this.currentUser.username ?
+          this.currentUser.username.charAt(0).toUpperCase() :
+          this.currentUser.email ?
+            this.currentUser.email.charAt(0).toUpperCase() :
+            'U';
         userAvatarLetter.textContent = letter;
         if (this.isDev) if (import.meta.env.DEV) console.log('✅ Set avatar letter:', letter);
       } else if (this.isDev) {
@@ -307,7 +308,7 @@ export class EnhancedCommentsManager {
       } else if (this.isDev) {
         console.warn('⚠️ Login prompt element not found - cannot show login message');
       }
-      
+
       if (commentForm) {
         commentForm.style.display = 'none';
         if (this.isDev) if (import.meta.env.DEV) console.log('✅ Hidden comment form');
@@ -328,31 +329,34 @@ export class EnhancedCommentsManager {
       // Clone the form to remove all event listeners
       const newForm = commentForm.cloneNode(true) as HTMLFormElement;
       commentForm.parentNode?.replaceChild(newForm, commentForm);
-      
+
       // Add our event listener to the new form
-      newForm.addEventListener('submit', (e) => 
+      newForm.addEventListener('submit', (e) =>
         handleSubmitComment(
-          e, 
-          this.postId!, 
-          this.currentUser, 
-          this.translations, 
-          this.apiUrls, 
-          this.showError.bind(this), 
-          this.showSuccess.bind(this), 
-          this.loadComments.bind(this), 
+          e,
+          this.postId!,
+          this.currentUser,
+          this.translations,
+          this.apiUrls,
+          this.showError.bind(this),
+          this.showSuccess.bind(this),
+          this.loadComments.bind(this),
           this.addRealComment.bind(this),
           this.isDev
         )
       );
-      
+
       if (this.isDev) {
         if (import.meta.env.DEV) console.log('📝 Comment form event listener attached');
       }
     }
 
     // Comment actions (like, dislike, reply, edit, delete)
-    // Note: Using document delegation, so no need to clone
-    document.addEventListener('click', (e) => this.handleCommentActions(e));
+    // Use AbortController to allow cleanup on page navigation
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
+
+    document.addEventListener('click', (e) => this.handleCommentActions(e), { signal });
 
     // Handle character count in edit textareas
     document.addEventListener('input', (e) => {
@@ -368,7 +372,7 @@ export class EnhancedCommentsManager {
           }
         }
       }
-    });
+    }, { signal });
 
     // Handle Escape key to cancel edit
     document.addEventListener('keydown', (e) => {
@@ -381,7 +385,7 @@ export class EnhancedCommentsManager {
           }
         }
       }
-    });
+    }, { signal });
   }
 
   private async loadComments(page: number = 1, append: boolean = false): Promise<void> {
@@ -416,26 +420,26 @@ export class EnhancedCommentsManager {
         if (response.status === 401 || response.status === 403) {
           if (import.meta.env.DEV) console.log('📥 Trying to load comments without credentials...');
           const publicResponse = await fetch(url.toString(), {
-            cache: 'no-cache'
+            cache: 'no-store'
           });
-          
+
           if (!publicResponse.ok) {
             throw new Error(`Failed to load comments: ${publicResponse.status}`);
           }
-          
+
           const publicData: CommentsResponse = await publicResponse.json();
           if (import.meta.env.DEV) console.log('📊 Public comments data:', publicData);
-          
+
           this.handlePaginatedResponse(publicData, append);
           return;
         }
-        
+
         throw new Error(`Failed to load comments: ${response.status}`);
       }
 
       const data: CommentsResponse = await response.json();
       if (import.meta.env.DEV) console.log('📊 Comments data received:', data);
-      
+
       // Log individual comment IDs for debugging
       if (Array.isArray(data)) {
         const commentIds = data.map(comment => comment.id);
@@ -444,12 +448,12 @@ export class EnhancedCommentsManager {
         const commentIds = data.comments.map(comment => comment.id);
         if (import.meta.env.DEV) console.log('📋 Comment IDs loaded:', commentIds);
       }
-      
+
       this.handlePaginatedResponse(data, append);
 
     } catch (error) {
       console.error('❌ Error loading comments:', error);
-      
+
       // Show a user-friendly message but don't completely fail
       const commentsListElement = document.getElementById('comments-list');
       if (commentsListElement) {
@@ -471,7 +475,7 @@ export class EnhancedCommentsManager {
       }
     } finally {
       this.isLoadingComments = false;
-      
+
       // Hide loading spinner
       const loadingElement = document.getElementById('comments-loading');
       if (loadingElement) {
@@ -482,11 +486,11 @@ export class EnhancedCommentsManager {
 
   private handlePaginatedResponse(data: CommentsResponse, append: boolean): void {
     if (import.meta.env.DEV) console.log('📊 Handling paginated response:', data, 'append:', append);
-    
+
     // Extract comments array from API response
     let commentsArray: Comment[] = [];
     let totalComments = 0;
-    
+
     // Handle different API response structures
     if (data.items && Array.isArray(data.items)) {
       commentsArray = data.items;
@@ -512,7 +516,7 @@ export class EnhancedCommentsManager {
 
     // Update pagination state based on API response
     this.totalComments = totalComments;
-    
+
     // Determine if there are more comments based on response size:
     // If API returned less than 20 comments, no more pages
     // If API returned 0 comments, no more pages
@@ -546,7 +550,7 @@ export class EnhancedCommentsManager {
     // Calculate remaining comments based on server pagination
     const currentlyLoaded = this.allComments.filter(c => !(c.parentId || c.parent_id)).length;
     const remainingComments = Math.max(0, this.totalComments - currentlyLoaded);
-    
+
     return `
       <div class="load-more-container text-center py-6">
         <button 
@@ -573,7 +577,7 @@ export class EnhancedCommentsManager {
 
     // Filter root comments (non-replies) - these are what we display
     const rootComments = this.allComments.filter(c => !(c.parentId || c.parent_id));
-    
+
     // No client-side pagination - server handles it
     if (import.meta.env.DEV) console.log(`📊 Displaying ${rootComments.length} root comments, hasMoreComments: ${this.hasMoreComments}`);
 
@@ -601,7 +605,7 @@ export class EnhancedCommentsManager {
 
     // Check if comments already have replies embedded
     const hasEmbeddedReplies = this.allComments.some(c => c.replies && Array.isArray(c.replies) && c.replies.length > 0);
-    
+
     if (!hasEmbeddedReplies) {
       // Group comments by parent manually - handle both parentId and parent_id
       this.allComments.filter(c => c.parentId || c.parent_id).forEach(reply => {
@@ -624,10 +628,10 @@ export class EnhancedCommentsManager {
 
     // Show load more button if server says there are more comments
     const loadMoreButton = this.hasMoreComments ? this.renderLoadMoreButton() : '';
-    
+
     // Replace all content
     commentsList.innerHTML = commentsHtml + loadMoreButton;
-    
+
     // Disable like/dislike buttons for user's own comments after rendering
     setTimeout(() => {
       disableOwnCommentButtons(this.currentUser, this.translations);
@@ -638,25 +642,25 @@ export class EnhancedCommentsManager {
     // Handle field mappings between API and frontend
     const authorId = comment.authorId || comment.user_id;
     const isDeleted = comment.is_deleted || false;
-    
+
     // Use only API response for edit permission - no local time checking
     // Disable editing and interactions for deleted comments
     const canEdit = this.currentUser && !isDeleted && (comment.canEdit || comment.can_edit);
     const canDelete = this.currentUser && !isDeleted && (this.currentUser.id === authorId || this.currentUser.rank === 'admin');
-    
+
     const userLikeStatus = comment.userLikeStatus ?? comment.user_like_status;
     const isLiked = userLikeStatus === true;
     const isDisliked = userLikeStatus === false;
-    
+
     const likesCount = comment.likes ?? comment.likes_count ?? 0;
     const dislikesCount = comment.dislikes ?? comment.dislikes_count ?? 0;
     const createdAt = comment.createdAt || comment.created_at || '';
 
     // Handle different author data structures
-    const authorName = typeof comment.author === 'string' 
-      ? comment.author 
+    const authorName = typeof comment.author === 'string'
+      ? comment.author
       : comment.author?.username || 'Unknown';
-    
+
     const authorInitial = authorName.charAt(0).toUpperCase();
 
     // Debug logging for edit button visibility
@@ -675,7 +679,7 @@ export class EnhancedCommentsManager {
 
     // Log rendering details for debugging
     if (this.isDev && replies.length > 0) {
-      if (import.meta.env.DEV) console.log(`🎨 Rendering comment ${comment.id} with ${replies.length} replies:`, replies.map(r => ({id: r.id, content: r.content?.substring(0, 50)})));
+      if (import.meta.env.DEV) console.log(`🎨 Rendering comment ${comment.id} with ${replies.length} replies:`, replies.map(r => ({ id: r.id, content: r.content?.substring(0, 50) })));
     }
 
     return `
@@ -694,10 +698,10 @@ export class EnhancedCommentsManager {
             </div>
             
             <div class="comment-content text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
-              ${comment.is_deleted ? 
-                `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` : 
-                comment.content
-              }
+              ${comment.is_deleted ?
+        `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` :
+        comment.content
+      }
             </div>
             
             <div class="flex items-center justify-between">
@@ -806,25 +810,25 @@ export class EnhancedCommentsManager {
     // Handle field mappings between API and frontend
     const authorId = reply.authorId || reply.user_id;
     const isDeleted = reply.is_deleted || false;
-    
+
     // Use only API response for edit permission - no local time checking
     // Disable editing and interactions for deleted comments
     const canEdit = this.currentUser && !isDeleted && (reply.canEdit || reply.can_edit);
     const canDelete = this.currentUser && !isDeleted && (this.currentUser.id === authorId || this.currentUser.rank === 'admin');
-    
+
     const userLikeStatus = reply.userLikeStatus ?? reply.user_like_status;
     const isLiked = userLikeStatus === true;
     const isDisliked = userLikeStatus === false;
-    
+
     const likesCount = reply.likes ?? reply.likes_count ?? 0;
     const dislikesCount = reply.dislikes ?? reply.dislikes_count ?? 0;
     const createdAt = reply.createdAt || reply.created_at || '';
 
     // Handle different author data structures
-    const authorName = typeof reply.author === 'string' 
-      ? reply.author 
+    const authorName = typeof reply.author === 'string'
+      ? reply.author
       : reply.author?.username || 'Unknown';
-    
+
     const authorInitial = authorName.charAt(0).toUpperCase();
 
     return `
@@ -843,10 +847,10 @@ export class EnhancedCommentsManager {
             </div>
             
             <div class="reply-content text-gray-700 dark:text-gray-300 text-xs leading-relaxed mb-3">
-              ${reply.is_deleted ? 
-                `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` : 
-                reply.content
-              }
+              ${reply.is_deleted ?
+        `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` :
+        reply.content
+      }
             </div>
             
             <div class="flex items-center justify-between">
@@ -928,13 +932,13 @@ export class EnhancedCommentsManager {
   private handleCommentActions(e: Event): void {
     const target = e.target as HTMLElement;
     const button = target.closest('[data-action]') as HTMLElement;
-    
+
     // Handle load more button
     if (target.id === 'load-more-comments' || target.closest('#load-more-comments')) {
       this.handleLoadMoreComments();
       return;
     }
-    
+
     if (!button) {
       // Handle edit form buttons that don't use data-action
       if (target.classList.contains('save-edit-btn') || target.closest('.save-edit-btn')) {
@@ -945,7 +949,7 @@ export class EnhancedCommentsManager {
         }
         return;
       }
-      
+
       if (target.classList.contains('cancel-edit-btn') || target.closest('.cancel-edit-btn')) {
         const cancelButton = target.closest('.cancel-edit-btn') as HTMLElement;
         const commentId = parseInt(cancelButton?.dataset.commentId || '0');
@@ -954,7 +958,7 @@ export class EnhancedCommentsManager {
         }
         return;
       }
-      
+
       return;
     }
 
@@ -970,10 +974,10 @@ export class EnhancedCommentsManager {
         break;
       case 'reply':
         handleReply(
-          commentId, 
-          this.postId!, 
-          this.currentUser, 
-          this.translations, 
+          commentId,
+          this.postId!,
+          this.currentUser,
+          this.translations,
           this.showError.bind(this),
           this.showSuccess.bind(this),
           this.loadComments.bind(this),
@@ -1020,18 +1024,18 @@ export class EnhancedCommentsManager {
 
   private async handleLoadMoreComments(): Promise<void> {
     if (this.isLoadingComments || !this.hasMoreComments) return;
-    
+
     if (import.meta.env.DEV) console.log('📥 Loading more comments, current page:', this.currentPage);
-    
+
     // Show loading state on button
     const loadMoreButton = document.getElementById('load-more-comments');
     if (loadMoreButton) {
       loadMoreButton.textContent = this.translations['comments.loading'] || 'Loading...';
       loadMoreButton.setAttribute('disabled', 'true');
     }
-    
+
     this.currentPage += 1;
-    
+
     try {
       await this.loadComments(this.currentPage, true); // true = append
     } catch (error) {
@@ -1075,7 +1079,7 @@ export class EnhancedCommentsManager {
   private formatDate(dateString: string): string {
     const date = new Date(dateString);
     const locale = this.lang === 'pl' ? 'pl-PL' : 'en-US';
-    
+
     return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
@@ -1101,7 +1105,7 @@ export class EnhancedCommentsManager {
   public reset(): void {
     this.isInitialized = false;
     this.currentUser = null;
-    
+
     // Reset pagination state
     this.allComments = [];
     this.currentPage = 1;
@@ -1119,7 +1123,7 @@ export class EnhancedCommentsManager {
 
     // Add to the beginning of allComments array for pagination
     this.allComments.unshift(comment);
-    
+
     // Re-render the comments with updated pagination
     this.renderPaginatedComments();
   }
@@ -1139,7 +1143,7 @@ export class EnhancedCommentsManager {
     if (repliesContainer) {
       const realReplyHtml = this.renderReply(reply);
       repliesContainer.insertAdjacentHTML('beforeend', realReplyHtml);
-      
+
       // Update replies count
       const repliesHeader = repliesContainer.querySelector('.text-xs');
       if (repliesHeader) {
@@ -1161,7 +1165,7 @@ export class EnhancedCommentsManager {
         replyFormContainer.insertAdjacentHTML('afterend', repliesHtml);
       }
     }
-    
+
     // Disable like/dislike buttons for user's own comments after rendering
     setTimeout(() => {
       disableOwnCommentButtons(this.currentUser, this.translations);
@@ -1236,11 +1240,11 @@ export class EnhancedCommentsManager {
   }
 
   private renderOptimisticComment(comment: Comment): string {
-    const authorName = typeof comment.author === 'string' 
-      ? comment.author 
+    const authorName = typeof comment.author === 'string'
+      ? comment.author
       : comment.author?.username || 'Unknown';
     const authorInitial = authorName.charAt(0).toUpperCase();
-    
+
     return `
       <div class="comment optimistic bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-blue-200 dark:border-blue-700 p-6 mb-4 opacity-75" data-comment-id="${comment.id}">
         <div class="flex items-start space-x-4">
@@ -1260,10 +1264,10 @@ export class EnhancedCommentsManager {
             </div>
             
             <div class="comment-content text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
-              ${comment.is_deleted ? 
-                `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` : 
-                comment.content
-              }
+              ${comment.is_deleted ?
+        `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` :
+        comment.content
+      }
             </div>
             
             <div class="flex items-center justify-between">
@@ -1289,11 +1293,11 @@ export class EnhancedCommentsManager {
   }
 
   private renderOptimisticReply(reply: Comment): string {
-    const authorName = typeof reply.author === 'string' 
-      ? reply.author 
+    const authorName = typeof reply.author === 'string'
+      ? reply.author
       : reply.author?.username || 'Unknown';
     const authorInitial = authorName.charAt(0).toUpperCase();
-    
+
     return `
       <div class="reply optimistic bg-gray-50 dark:bg-gray-750 rounded-lg border border-blue-200 dark:border-blue-600 p-4 mb-3 opacity-75" data-comment-id="${reply.id}">
         <div class="flex items-start space-x-3">
@@ -1313,10 +1317,10 @@ export class EnhancedCommentsManager {
             </div>
             
             <div class="reply-content text-gray-700 dark:text-gray-300 text-xs leading-relaxed mb-3">
-              ${reply.is_deleted ? 
-                `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` : 
-                reply.content
-              }
+              ${reply.is_deleted ?
+        `<em class="text-gray-500 dark:text-gray-400">${this.translations['comments.deleted'] || 'This comment has been deleted'}</em>` :
+        reply.content
+      }
             </div>
             
             <div class="flex items-center justify-between">
@@ -1360,10 +1364,16 @@ let globalCommentsManager: EnhancedCommentsManager | null = null;
 export function resetCommentsManager(): void {
   if (globalCommentsManager) {
     if (import.meta.env.DEV) {
-      if (import.meta.env.DEV) console.log('🔄 Resetting comments manager for new page...');
+      console.log('🔄 Resetting comments manager for new page...');
     }
+
+    // Abort any active event listeners from previous manager
+    if ((globalCommentsManager as any).abortController) {
+      (globalCommentsManager as any).abortController.abort();
+    }
+
     globalCommentsManager = null;
-    
+
     // Clear initialization flag from any existing containers
     const commentsContainer = document.getElementById('comments-section-wrapper');
     if (commentsContainer) {
@@ -1408,11 +1418,11 @@ export function initCommentsPage(lang: string): void {
     const devMode = isDev === 'true';
 
     globalCommentsManager = new EnhancedCommentsManager(postId, lang, parsedTranslations, parsedApiUrls, devMode);
-    
+
     // Mark container as initialized for this specific post
     commentsContainer.dataset.initialized = 'true';
     commentsContainer.dataset.currentPostId = postId;
-    
+
     if (import.meta.env.DEV) {
       if (import.meta.env.DEV) console.log('✅ Comments manager initialized successfully for post:', postId);
     }

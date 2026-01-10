@@ -1,5 +1,5 @@
 // Comment replies functionality  
-import type { Comment } from '../types/blog.ts';
+import type { Comment } from '../types/blog.ts'; // Upewnij się, że masz ten typ lub zdefiniuj go tutaj
 import { AuthHelper } from '../utils/authHelper.ts';
 import { API_CONFIG } from '../config/api.ts';
 
@@ -41,106 +41,123 @@ export function handleReply(
   isLoadingComments?: boolean,
   addRealReply?: (reply: Comment, parentId: number) => void
 ): void {
-  console.log('Reply to comment:', commentId);
-  
-  // Check authentication
+  console.log('💬 Reply button clicked for comment:', commentId);
+
+  // 1. Sprawdź autoryzację
   if (!currentUser) {
     const loginRequiredText = translations['comments.loginRequired'] || 'Please login to reply';
     showError(loginRequiredText);
     return;
   }
-  
-  // Find the comment element
-  const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`) as HTMLElement;
-  if (!commentElement) {
-    console.error('Comment element not found for ID:', commentId);
+
+  // 2. Znajdź dedykowany kontener na formularz (zdefiniowany w comments.ts renderComment)
+  // Szukamy po ID, bo jest unikalne i szybsze
+  const replyContainer = document.getElementById(`reply-form-${commentId}`);
+
+  if (!replyContainer) {
+    console.error('❌ Reply container not found for ID:', `reply-form-${commentId}`);
+    // Fallback: Jeśli nie ma kontenera, spróbujmy znaleźć element komentarza (stara metoda)
+    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+    if (!commentElement) {
+      console.error('❌ Comment element also not found');
+      return;
+    }
+    console.warn('⚠️ Using fallback appending method');
+    // ... tutaj ewentualnie stara logika, ale skupmy się na naprawie głównej
     return;
   }
-  
-  // Check if reply form already exists
-  const existingReplyForm = commentElement.querySelector('.reply-form');
-  if (existingReplyForm) {
-    existingReplyForm.remove(); // Remove existing form
+
+  // 3. Jeśli formularz już jest otwarty (ma zawartość), to go zamknij (toggle)
+  if (replyContainer.innerHTML.trim() !== '' && replyContainer.style.display !== 'none') {
+    replyContainer.style.display = 'none';
+    replyContainer.innerHTML = '';
     return;
   }
-  
-  // Create reply form
-  const replyForm = document.createElement('div');
-  replyForm.className = 'reply-form mt-4 bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700';
-  
-  // Get the username to display in "Replying to" section
-  const usernameElement = commentElement.querySelector('h4');
-  const replyToUsername = usernameElement ? usernameElement.textContent : 'user';
-  
-  replyForm.innerHTML = `
-    <div class="flex items-start space-x-3">
-      <!-- User Avatar -->
-      <div class="flex-shrink-0">
-        <div class="w-7 h-7 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-          ${currentUser.username ? currentUser.username.charAt(0).toUpperCase() : currentUser.email.charAt(0).toUpperCase()}
+
+  // 4. Znajdź nazwę użytkownika, któremu odpowiadamy (dla UI)
+  const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+  let replyToUsername = 'user';
+  if (commentElement) {
+    const usernameEl = commentElement.querySelector('h4, h5'); // Szukamy autora w nagłówku komentarza
+    if (usernameEl) replyToUsername = usernameEl.textContent || 'user';
+  }
+
+  // 5. Generuj HTML formularza
+  // Używamy innerHTML kontenera zamiast tworzyć nowy element
+  replyContainer.innerHTML = `
+    <div class="reply-form bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 fade-in">
+      <div class="flex items-start space-x-3">
+        <div class="flex-shrink-0">
+          <div class="w-7 h-7 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+            ${currentUser.username ? currentUser.username.charAt(0).toUpperCase() : (currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U')}
+          </div>
         </div>
-      </div>
-      
-      <!-- Reply Form Content -->
-      <div class="flex-1">
-        <form class="reply-form-content">
-          <div class="mb-3">
-            <textarea 
-              name="reply-content" 
-              rows="3" 
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="${translations['comments.writeReply'] || 'Write your reply...'}"
-              required
-            ></textarea>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex space-x-2">
-              <button 
-                type="submit" 
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                </svg>
-                <span>${translations['comments.submitReply'] || 'Reply'}</span>
-              </button>
-              <button 
-                type="button" 
-                class="cancel-reply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-              >
-                ${translations['comments.cancel'] || 'Cancel'}
-              </button>
+        
+        <div class="flex-1">
+          <form class="reply-form-content">
+            <div class="mb-3">
+              <textarea 
+                name="reply-content" 
+                rows="3" 
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-gray-100 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="${translations['comments.writeReply'] || 'Write your reply...'}"
+                required
+              ></textarea>
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              ${translations['comments.replyTo'] || 'Replying to'} <strong>${replyToUsername}</strong>
+            <div class="flex items-center justify-between">
+              <div class="flex space-x-2">
+                <button 
+                  type="submit" 
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                  </svg>
+                  <span>${translations['comments.submitReply'] || 'Reply'}</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="cancel-reply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                >
+                  ${translations['comments.cancel'] || 'Cancel'}
+                </button>
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                ${translations['comments.replyTo'] || 'Replying to'} <strong>${replyToUsername}</strong>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   `;
-  
-  // Add reply form to comment
-  commentElement.appendChild(replyForm);
-  
-  // Add event listeners
-  const form = replyForm.querySelector('.reply-form-content') as HTMLFormElement;
-  const cancelBtn = replyForm.querySelector('.cancel-reply') as HTMLButtonElement;
-  
+
+  // 6. Pokaż kontener
+  replyContainer.style.display = 'block';
+
+  // 7. Podepnij Event Listenery
+  const form = replyContainer.querySelector('.reply-form-content') as HTMLFormElement;
+  const cancelBtn = replyContainer.querySelector('.cancel-reply') as HTMLButtonElement;
+
   if (form) {
     form.addEventListener('submit', (e) => {
       handleSubmitReply(e, commentId, postId, translations, showError, showSuccess, loadComments, isLoadingComments, addRealReply);
     });
   }
-  
+
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => replyForm.remove());
+    cancelBtn.addEventListener('click', () => {
+      replyContainer.style.display = 'none';
+      replyContainer.innerHTML = ''; // Wyczyść formularz
+    });
   }
-  
-  // Focus on textarea
-  const textarea = replyForm.querySelector('textarea') as HTMLTextAreaElement;
+
+  // 8. Skupienie na polu tekstowym i przewinięcie do widoku
+  const textarea = replyContainer.querySelector('textarea') as HTMLTextAreaElement;
   if (textarea) {
     textarea.focus();
+    // Przewiń do formularza, żeby użytkownik widział gdzie pisze
+    replyContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
@@ -148,7 +165,7 @@ export function handleReply(
 export async function handleSubmitReply(
   e: Event,
   parentCommentId: number,
-  postId: string,
+  post_slug: string,
   translations: Translations,
   showError: (message: string) => void,
   showSuccess?: (message: string) => void,
@@ -157,11 +174,11 @@ export async function handleSubmitReply(
   addRealReply?: (reply: Comment, parentId: number) => void
 ): Promise<void> {
   e.preventDefault();
-  
+
   const form = e.target as HTMLFormElement;
   const formData = new FormData(form);
   const content = (formData.get('reply-content') as string)?.trim();
-  
+
   if (!content) {
     const requiredText = translations['comments.required'] || 'Reply content is required';
     showError(requiredText);
@@ -172,24 +189,18 @@ export async function handleSubmitReply(
   const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
   const originalText = submitBtn?.textContent || '';
   const postingText = translations['comments.posting'] || 'Posting...';
-  
+
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.textContent = postingText;
   }
 
   try {
-    // Remove reply form immediately for better UX
-    const replyForm = form.closest('.reply-form');
-    if (replyForm) {
-      replyForm.remove();
-    }
+    // URL: /api/comments/{post_slug} - ten sam co przy dodawaniu głównego komentarza
+    // Backend rozróżnia odpowiedź po polu parent_id w body
+    const url = `${API_CONFIG.comments}/${post_slug}`;
+    console.log('🚀 Posting reply to:', url, 'Parent ID:', parentCommentId);
 
-    // Use the correct URL format: /api/comments/post/{post_id}
-    const url = `${API_CONFIG.comments}/post/${postId}`;
-    console.log('Creating reply at URL:', url, 'for parent:', parentCommentId);
-    
-    // Use AuthHelper for automatic token refresh
     const response = await AuthHelper.makeAuthenticatedRequest(url, {
       method: 'POST',
       headers: {
@@ -197,106 +208,48 @@ export async function handleSubmitReply(
       },
       body: JSON.stringify({
         content: content,
-        parent_id: parentCommentId // ID komentarza na który odpowiadamy
+        parent_id: parentCommentId // KLUCZOWE: to mówi backendowi, że to odpowiedź
       })
     });
 
     if (!response.ok) {
-      let errorData;
+      let errorMsg = `HTTP ${response.status}`;
       try {
-        errorData = await response.json();
-        console.error('❌ API Error Response:', errorData);
-      } catch (parseError) {
-        console.error('❌ Failed to parse error response:', parseError);
-        errorData = {};
-      }
-      throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        const errData = await response.json();
+        errorMsg = errData.detail || errData.message || errorMsg;
+      } catch { }
+      throw new Error(errorMsg);
     }
 
-    // Try to get the reply data from API response
-    let result;
-    try {
-      result = await response.json();
-      console.log('✅ Reply created successfully:', result);
-      
-      // Add the real reply from API response immediately
-      if (result && (result.id || result.reply) && addRealReply) {
-        const replyFromApi = result.reply || result;
-        console.log('✨ Adding real reply from API response:', replyFromApi);
-        addRealReply(replyFromApi, parentCommentId);
-        
-        const successText = translations['comments.replySuccess'] || 'Reply added successfully';
-        if (showSuccess) {
-          showSuccess(successText);
-        }
-        
-        console.log('✅ Reply posted successfully');
-        return; // Exit early since we added the reply directly
-      }
-      
-    } catch {
-      console.log('✅ Reply created (no JSON response), reloading comments');
-      // If no JSON response, reload comments to get the new reply
-      if (loadComments && !isLoadingComments) {
-        await loadComments();
-      }
-      result = { success: true };
+    const result = await response.json();
+    console.log('✅ Reply created:', result);
+
+    // Sukces!
+    if (showSuccess) showSuccess(translations['comments.replySuccess'] || 'Reply added successfully');
+
+    // Ukryj formularz po sukcesie
+    const replyContainer = document.getElementById(`reply-form-${parentCommentId}`);
+    if (replyContainer) {
+      replyContainer.style.display = 'none';
+      replyContainer.innerHTML = '';
     }
 
-    // Fallback: reload comments if API didn't return reply data
-    console.log('🔄 Fallback: reloading comments to sync with server');
-    if (loadComments && !isLoadingComments) {
+    // Dodaj odpowiedź do widoku (Optymistycznie lub z odpowiedzi API)
+    if (result && (result.id || result.reply) && addRealReply) {
+      const replyObj = result.reply || result;
+      addRealReply(replyObj, parentCommentId);
+    } else if (loadComments) {
+      // Fallback: przeładuj wszystkie komentarze
       await loadComments();
     }
-    
-    const successText = translations['comments.replySuccess'] || 'Reply added successfully';
-    if (showSuccess) {
-      showSuccess(successText);
-    }
-    
-    console.log('✅ Reply posted successfully');
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error posting reply:', error);
-    
-    // If error occurred, reload comments to sync with server state
-    if (loadComments && !isLoadingComments) {
-      await loadComments();
-    }
-    
-    const errorText = translations['comments.error'] || 'Error adding reply';
-    showError(errorText);
+    showError(error.message || translations['comments.error'] || 'Error adding reply');
   } finally {
-    // Re-enable submit button
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = originalText;
     }
   }
-}
-
-// Enhanced submit reply handler with all dependencies
-export async function handleSubmitReplyWithDependencies(
-  e: Event,
-  parentCommentId: number,
-  postId: string,
-  translations: Translations,
-  apiUrls: ApiUrls,
-  showError: (message: string) => void,
-  showSuccess: (message: string) => void,
-  loadComments: () => Promise<void>,
-  isLoadingComments: boolean,
-  addRealReply?: (reply: Comment, parentId: number) => void
-): Promise<void> {
-  await handleSubmitReply(
-    e,
-    parentCommentId,
-    postId,
-    translations,
-    showError,
-    showSuccess,
-    loadComments,
-    isLoadingComments,
-    addRealReply
-  );
 }

@@ -50,7 +50,10 @@ services:
     container_name: kgr33n-backend
     ports:
       - "8080:8080"
+    env_file:
+      - ./backend/.env
     environment:
+      # These override values from .env if needed
       - DATABASE_URL=postgresql://kgr33n:dev_password_123@postgres:5432/kgr33n_dev
       - SECRET_KEY=dev-secret-key-not-for-production-change-me
       - ENVIRONMENT=development

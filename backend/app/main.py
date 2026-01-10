@@ -7,9 +7,9 @@ from slowapi.middleware import SlowAPIMiddleware
 import os
 import asyncio
 from datetime import datetime
-from .database import init_default_languages, init_roles_and_ranks
-from .routers import auth, languages, comments, roles, profile
-from .routers import blog_multilingual as blog
+from .database import init_roles_and_ranks
+from .routers import auth, comments, roles, profile
+from .routers import blog
 from .security import limiter, get_current_admin_user, conditional_limit
 from .schemas import ContactForm, ContactResponse
 from .email_service import EmailService
@@ -181,7 +181,6 @@ app.add_middleware(SlowAPIMiddleware)
 # Include routers with authentication
 app.include_router(blog.router, prefix="/api/blog", tags=["blog"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
-app.include_router(languages.router, prefix="/api/languages", tags=["languages"])
 app.include_router(comments.router, prefix="/api/comments", tags=["comments"])
 app.include_router(roles.router, tags=["roles"])
 app.include_router(profile.router, prefix="/api", tags=["profile"])

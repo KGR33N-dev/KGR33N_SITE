@@ -88,36 +88,36 @@ export function canEditComment(comment: ApiComment, currentUser: User | null): b
     console.log('❌ No current user');
     return false;
   }
-  
+
   // Admin can always edit
   if (currentUser.rank === 'admin') {
     console.log('✅ User is admin - can edit');
     return true;
   }
-  
+
   // Check if user owns the comment
   const commentAuthorId = comment.authorId || comment.user_id;
   if (currentUser.id !== commentAuthorId) {
     console.log('❌ User does not own comment');
     return false;
   }
-  
+
   // Check 15-minute edit window
   const createdAt = comment.createdAt || comment.created_at;
   if (!createdAt) {
     console.log('❌ No created date');
     return false;
   }
-  
+
   const commentDate = new Date(createdAt);
   const now = new Date();
   const diffMinutes = (now.getTime() - commentDate.getTime()) / (1000 * 60);
-  
+
   console.log(`⏰ Time check: ${diffMinutes.toFixed(2)} minutes elapsed, limit is 15 minutes`);
-  
+
   const canEdit = diffMinutes <= 15;
   console.log(`${canEdit ? '✅' : '❌'} Time-based edit permission: ${canEdit}`);
-  
+
   return canEdit;
 }
 
@@ -125,11 +125,11 @@ export function canEditComment(comment: ApiComment, currentUser: User | null): b
 export function getRemainingEditTime(comment: ApiComment): number {
   const createdAt = comment.createdAt || comment.created_at;
   if (!createdAt) return 0;
-  
+
   const commentDate = new Date(createdAt);
   const now = new Date();
   const diffMinutes = (now.getTime() - commentDate.getTime()) / (1000 * 60);
-  
+
   return Math.max(0, 15 - diffMinutes);
 }
 
@@ -144,7 +144,12 @@ export function showEditForm(
     showError(translations['comments.loginRequired'] || 'You must be logged in to edit comments');
     return;
   }
-
+  const existingForm = document.getElementById(`edit-form-${commentId}`);
+  if (existingForm) {
+    const textarea = existingForm.querySelector('textarea');
+    if (textarea) textarea.focus();
+    return;
+  }
   const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
   if (!commentElement) {
     showError(translations['comments.commentNotFound'] || 'Comment not found');
@@ -158,14 +163,14 @@ export function showEditForm(
   }
 
   const originalContent = contentElement.textContent?.trim() || '';
-  
+
   // Create edit form
   const editForm = createEditForm(commentId, originalContent, translations);
-  
+
   // Hide original content and show edit form
   (contentElement as HTMLElement).style.display = 'none';
   contentElement.insertAdjacentHTML('afterend', editForm);
-  
+
   // Focus on textarea
   const textarea = commentElement.querySelector('#edit-textarea') as HTMLTextAreaElement;
   if (textarea) {
@@ -244,14 +249,14 @@ export async function handleEditSubmit(
   const editForm = document.getElementById(`edit-form-${commentId}`);
   const textarea = document.getElementById('edit-textarea') as HTMLTextAreaElement;
   const saveBtn = editForm?.querySelector('.save-edit-btn') as HTMLButtonElement;
-  
+
   if (!editForm || !textarea || !saveBtn) {
     showError(translations['comments.formNotFound'] || 'Edit form not found');
     return;
   }
 
   const newContent = textarea.value.trim();
-  
+
   if (!newContent) {
     showError(translations['comments.contentRequired'] || 'Comment content is required');
     return;
@@ -275,9 +280,9 @@ export async function handleEditSubmit(
       console.error('❌ updateCommentTemplate not found in apiUrls:', apiUrls);
       throw new Error('Update comment API URL not configured');
     }
-    
+
     const updateUrl = apiUrls.updateCommentTemplate.replace('{id}', commentId.toString());
-    
+
     const response = await AuthHelper.makeAuthenticatedRequest(updateUrl, {
       method: 'PUT',
       headers: {
@@ -295,7 +300,7 @@ export async function handleEditSubmit(
       } catch {
         errorData = { detail: response.statusText };
       }
-      
+
       if (response.status === 403) {
         showError(translations['comments.editTimeExpired'] || 'Edit time has expired (15 minutes limit)');
       } else if (response.status === 404) {
@@ -307,15 +312,15 @@ export async function handleEditSubmit(
     }
 
     const updatedComment = await response.json();
-    
+
     // Update comment content in UI
     updateCommentContent(commentId, updatedComment.content || newContent);
-    
+
     // Hide edit form and show original content
     hideEditForm(commentId);
-    
+
     showSuccess(translations['comments.editSuccess'] || 'Comment updated successfully');
-    
+
   } catch (error) {
     console.error('❌ Error updating comment:', error);
     showError(translations['comments.editFailed'] || 'Failed to update comment');
@@ -339,11 +344,11 @@ function hideEditForm(commentId: number): void {
 
   const editForm = document.getElementById(`edit-form-${commentId}`);
   const contentElement = commentElement.querySelector('.comment-content, .reply-content');
-  
+
   if (editForm) {
     editForm.remove();
   }
-  
+
   if (contentElement) {
     (contentElement as HTMLElement).style.display = 'block';
   }
@@ -372,7 +377,7 @@ export function setupEditEventListeners(
   // Handle edit button clicks
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    
+
     // Edit button
     if (target.classList.contains('edit-btn') || target.closest('.edit-btn')) {
       const button = target.closest('.edit-btn') as HTMLElement;
@@ -381,7 +386,7 @@ export function setupEditEventListeners(
         showEditForm(commentId, currentUser, translations, showError);
       }
     }
-    
+
     // Save edit button
     if (target.classList.contains('save-edit-btn') || target.closest('.save-edit-btn')) {
       const button = target.closest('.save-edit-btn') as HTMLElement;
@@ -390,7 +395,7 @@ export function setupEditEventListeners(
         handleEditSubmit(commentId, currentUser, translations, apiUrls, showError, showSuccess, _loadComments);
       }
     }
-    
+
     // Cancel edit button
     if (target.classList.contains('cancel-edit-btn') || target.closest('.cancel-edit-btn')) {
       const button = target.closest('.cancel-edit-btn') as HTMLElement;

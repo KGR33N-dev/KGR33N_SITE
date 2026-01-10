@@ -41,13 +41,17 @@ export class AuthHelper {
    */
   static async makeAuthenticatedRequest(url: string, options: ApiRequestOptions = {}): Promise<Response> {
     const { skipRefresh = false, ...fetchOptions } = options;
-    
+
     // Prepare request with HTTP-only cookies
     const requestOptions: RequestInit = {
       ...fetchOptions,
+      cache: 'no-store',
       credentials: 'include', // Always include HTTP-only cookies
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...fetchOptions.headers,
       },
     };
@@ -58,7 +62,7 @@ export class AuthHelper {
     // Handle 401 - attempt refresh if not skipped
     if (response.status === 401 && !skipRefresh) {
       const refreshSuccess = await this.refreshToken();
-      
+
       if (refreshSuccess) {
         // Retry the request after successful refresh
         response = await fetch(url, requestOptions);
@@ -101,6 +105,7 @@ export class AuthHelper {
 
       const response = await fetch(API_URLS.refresh(), {
         method: 'POST',
+        cache: 'no-store',
         credentials: 'include', // Include refresh token cookie
         headers: {
           'Content-Type': 'application/json'
@@ -114,7 +119,7 @@ export class AuthHelper {
 
         // Clear user cache to force fresh verification
         this.userCache = null;
-        
+
 
         return true;
       } else {
@@ -124,17 +129,17 @@ export class AuthHelper {
 
         // Clear user cache on failed refresh
         this.userCache = { user: null, timestamp: Date.now() };
-        
+
         return false;
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('❌ AuthHelper: Token refresh error:', error);
       }
-      
+
       // Clear user cache on error
       this.userCache = { user: null, timestamp: Date.now() };
-      
+
       return false;
     }
   }
@@ -148,7 +153,7 @@ export class AuthHelper {
       const age = Date.now() - this.userCache.timestamp;
       if (age < this.CACHE_TTL) {
         if (import.meta.env.DEV) {
-          console.log('🎯 AuthHelper: Using cached user verification (age: ' + Math.round(age/1000) + 's)');
+          console.log('🎯 AuthHelper: Using cached user verification (age: ' + Math.round(age / 1000) + 's)');
         }
         return this.userCache.user;
       }
@@ -165,18 +170,18 @@ export class AuthHelper {
 
       if (response.ok) {
         const userData = await response.json();
-        
+
         if (import.meta.env.DEV) {
           console.log('✅ AuthHelper: User verified:', userData.email);
         }
-        
+
         this.userCache = { user: userData, timestamp: Date.now() };
         return userData;
       } else {
         if (import.meta.env.DEV) {
           console.log('❌ AuthHelper: User verification failed with status:', response.status);
         }
-        
+
         this.userCache = { user: null, timestamp: Date.now() };
         return null;
       }
@@ -184,7 +189,7 @@ export class AuthHelper {
       if (import.meta.env.DEV) {
         console.error('❌ AuthHelper: Error verifying user:', error);
       }
-      
+
       this.userCache = { user: null, timestamp: Date.now() };
       return null;
     }
@@ -215,6 +220,7 @@ export class AuthHelper {
       // Call backend logout endpoint
       await fetch(API_URLS.logout(), {
         method: 'POST',
+        cache: 'no-store',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +231,7 @@ export class AuthHelper {
         console.warn('AuthHelper: Logout request failed, but continuing with cleanup:', error);
       }
     }
-    
+
     // Clear local state
     this.userCache = null;
   }

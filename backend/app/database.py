@@ -59,45 +59,7 @@ def get_db():
     finally:
         db.close()
 
-def init_default_languages():
-    """Initialize default languages in the system"""
-    from app.models import Language
-    
-    db = SessionLocal()
-    try:
-        # Check if languages already exist
-        existing_count = db.query(Language).count()
-        if existing_count > 0:
-            return  # Languages already exist
-        
-        # Add default languages
-        default_languages = [
-            {
-                "code": "en",
-                "name": "English",
-                "native_name": "English",
-                "is_active": True
-            },
-            {
-                "code": "pl", 
-                "name": "Polish",
-                "native_name": "Polski",
-                "is_active": True
-            }
-        ]
-        
-        for lang_data in default_languages:
-            language = Language(**lang_data)
-            db.add(language)
-        
-        db.commit()
-        print("✅ Initialized default languages: English, Polish")
-        
-    except Exception as e:
-        print(f"❌ Error during languages initialization: {e}")
-        db.rollback()
-    finally:
-        db.close()
+
 
 def init_roles_and_ranks():
     """Initialize default roles and ranks in the system"""

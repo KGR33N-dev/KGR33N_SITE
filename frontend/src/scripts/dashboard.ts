@@ -14,8 +14,6 @@ interface DashboardTranslations {
   errorLoadingData: string;
   connected: string;
   disconnected: string;
-  published: string;
-  draft: string;
   edit: string;
   checking: string;
 }
@@ -24,9 +22,7 @@ interface Post {
   id: number;
   title: string;
   slug: string;
-  is_published: boolean;
   created_at: string;
-  language?: string;
   comment_count?: number;
 }
 
@@ -60,8 +56,7 @@ export class DashboardManager {
       // Load dashboard data once
       await this.loadDashboardData();
 
-      // Setup navigation buttons
-      this.setupButtons();
+
 
       // Check API status
       this.checkAPIStatus();
@@ -76,12 +71,12 @@ export class DashboardManager {
     try {
       if (this.isDev) {
         console.log('🔄 Loading dashboard data...');
-        console.log('🎯 Using endpoint:', API_URLS.getAdminPosts({ status: 'all', per_page: 100 }));
+        console.log('🎯 Using endpoint:', API_URLS.getAdminPosts({ per_page: 100 }));
       }
 
       // Load ALL posts (published and drafts) for admin dashboard using authenticated admin endpoint
       const response = await AdminAuth.makeAuthenticatedRequest(
-        API_URLS.getAdminPosts({ status: 'all', per_page: 100 })
+        API_URLS.getAdminPosts({ per_page: 100 })
       );
 
       if (!response.ok) {
@@ -107,9 +102,7 @@ export class DashboardManager {
             id: posts[0].id,
             title: posts[0].title,
             slug: posts[0].slug,
-            is_published: posts[0].is_published,
             created_at: posts[0].created_at,
-            language: posts[0].language
           } : 'No posts found'
         });
       }
@@ -117,9 +110,7 @@ export class DashboardManager {
       // Update stats
       this.updateStats(posts);
 
-      // Show recent drafts (filter unpublished posts and show first 5)
-      const draftPosts = posts.filter(post => !post.is_published);
-      this.showDrafts(draftPosts.slice(0, 5));
+
 
       // Show all posts
       this.showAllPosts(posts);
@@ -132,53 +123,18 @@ export class DashboardManager {
 
   private updateStats(posts: Post[]): void {
     const total = posts.length;
-    const published = posts.filter(p => p.is_published).length;
-    const drafts = total - published;
 
     const totalElement = document.getElementById('total-posts');
-    const publishedElement = document.getElementById('published-posts');
-    const draftElement = document.getElementById('draft-posts');
 
     if (totalElement) totalElement.textContent = total.toString();
-    if (publishedElement) publishedElement.textContent = published.toString();
-    if (draftElement) draftElement.textContent = drafts.toString();
 
     // If any elements are missing, log warning
-    if (!totalElement || !publishedElement || !draftElement) {
+    if (!totalElement) {
       if (this.isDev) console.warn('Some stats elements not found in DOM');
     }
   }
 
-  private showDrafts(drafts: Post[]): void {
-    const container = document.getElementById('draft-posts-list');
-    if (!container) return;
 
-    if (drafts.length === 0) {
-      container.innerHTML = `
-        <div class="text-center py-8">
-          <p class="text-gray-600 dark:text-gray-400">${this.translations.noPostsYet}</p>
-        </div>
-      `;
-      return;
-    }
-
-    const currentLang = window.location.pathname.split('/')[1] || 'pl';
-    container.innerHTML = drafts.map(post => `
-      <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-        <a href="/${currentLang}/blog/${post.slug}" class="flex-1">
-          <h4 class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">${post.title || post.slug}</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">${new Date(post.created_at).toLocaleDateString()}</p>
-        </a>
-        <button 
-          onclick="togglePostStatus(${post.id}, true)" 
-          class="ml-4 px-3 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-full hover:bg-green-200 dark:hover:bg-green-900/40 transition-colors"
-          title="Publish this post"
-        >
-          Publish
-        </button>
-      </div>
-    `).join('');
-  }
 
   private showAllPosts(posts: Post[]): void {
     const container = document.getElementById('all-posts-list');
@@ -194,7 +150,7 @@ export class DashboardManager {
     }
 
     if (this.isDev) {
-      console.log('📄 Rendering all posts:', posts.map(post => ({ id: post.id, title: post.title, published: post.is_published })));
+      console.log('📄 Rendering all posts:', posts.map(post => ({ id: post.id, title: post.title })));
     }
 
     const currentLang = window.location.pathname.split('/')[1] || 'pl';
@@ -220,49 +176,10 @@ export class DashboardManager {
               </svg>
               <span class="text-sm">${commentCount}</span>
             </div>
-            
-            <!-- Status badge -->
-            <span class="px-2 py-1 text-xs font-medium ${post.is_published
-          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-        } rounded-full">
-              ${post.is_published ? this.translations.published : this.translations.draft}
-            </span>
-            
-            <!-- Toggle button -->
-            <button 
-              onclick="togglePostStatus(${post.id}, ${!post.is_published})" 
-              class="px-3 py-1 text-xs font-medium ${post.is_published
-          ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40'
-          : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40'
-        } rounded-lg transition-colors"
-              title="${post.is_published ? 'Unpublish (make draft)' : 'Publish'}"
-            >
-              ${post.is_published ? 'Unpublish' : 'Publish'}
-            </button>
           </div>
         </div>
       `;
     }).filter(html => html !== '').join('');
-  }
-
-  private setupButtons(): void {
-    const languagesBtn = document.getElementById('languages-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-
-    if (languagesBtn) {
-      languagesBtn.onclick = () => {
-        const currentLang = window.location.pathname.split('/')[1];
-        window.location.href = `/${currentLang}/admin/languages`;
-      };
-    }
-
-    if (settingsBtn) {
-      settingsBtn.onclick = () => {
-        const currentLang = window.location.pathname.split('/')[1];
-        window.location.href = `/${currentLang}/account`;
-      };
-    }
   }
 
   private async checkAPIStatus(): Promise<void> {
@@ -270,7 +187,7 @@ export class DashboardManager {
     const text = document.getElementById('api-status-text');
 
     try {
-      const response = await fetch(API_URLS.health());
+      const response = await fetch(API_URLS.health(), { cache: 'no-store' });
       if (response.ok) {
         if (icon) icon.className = 'w-3 h-3 rounded-full bg-green-500 mr-2';
         if (text) {
@@ -337,50 +254,4 @@ export class DashboardManager {
   }
 }
 
-// Global functions for post actions (called from HTML onclick)
-declare global {
-  function togglePostStatus(postId: number, publish: boolean): Promise<void>;
-}
 
-window.togglePostStatus = async function (postId: number, publish: boolean): Promise<void> {
-  try {
-    // Find and disable the button
-    const buttons = document.querySelectorAll(`button[onclick*="togglePostStatus(${postId}"]`) as NodeListOf<HTMLButtonElement>;
-    buttons.forEach(btn => {
-      btn.disabled = true;
-      btn.textContent = 'Updating...';
-      btn.classList.add('opacity-50');
-    });
-
-    // Make the update request
-    const response = await AdminAuth.makeAuthenticatedRequest(
-      API_URLS.updatePost(postId),
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ is_published: publish })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to update post: ${response.status} ${response.statusText}`);
-    }
-
-    // Success - reload to refresh the dashboard
-    window.location.reload();
-
-  } catch (error) {
-    console.error('Error updating post status:', error);
-
-    // Restore button states
-    const buttons = document.querySelectorAll(`button[onclick*="togglePostStatus(${postId}"]`) as NodeListOf<HTMLButtonElement>;
-    buttons.forEach(btn => {
-      btn.disabled = false;
-      btn.classList.remove('opacity-50');
-    });
-
-    alert('Failed to update post status. Please try again.');
-  }
-};

@@ -3,7 +3,6 @@ User profile management router
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from ..database import get_db
 from ..models import User, UserRoleEnum, Comment, CommentLike, APIKey

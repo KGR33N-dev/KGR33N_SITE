@@ -2,7 +2,12 @@
 import { getCollection } from "astro:content";
 import Layout from "~/layouts/PageLayout.astro";
 import { languages } from "~/i18n";
+import fs from "node:fs";
+import path from "node:path";
+// Importujemy Twój komponent komentarzy
+import Comments from "~/components/blog/Comments.astro";
 
+// Generowanie ścieżek dla wszystkich postów i języków
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return Object.keys(languages).flatMap((lang) =>
@@ -16,48 +21,29 @@ export async function getStaticPaths() {
 const { post, lang } = Astro.props;
 const { Content } = await post.render();
 
-// Image resolution logic
-import fs from "node:fs";
-import path from "node:path";
-
+// Funkcja pomocnicza do obrazków
 function getPostImage(postData, slug) {
-  // 1. Check frontmatter
-  if (postData.heroImage) {
-    return postData.heroImage;
-  }
-
-  // 2. Check for slug-based images in public/assets/images/blog/
-  // Note: In production build, we might not have fs access to source files same way,
-  // but we can check if file exists in the build output or just rely on convention.
-  // For SSG, this runs at build time, so fs is available.
+  if (postData.heroImage) return postData.heroImage;
   try {
     const extensions = ["jpg", "png", "webp", "jpeg"];
     const publicDir = path.join(process.cwd(), "public");
     const blogImagesDir = path.join(publicDir, "assets", "images", "blog");
-
     for (const ext of extensions) {
       const filename = `${slug}.${ext}`;
       if (fs.existsSync(path.join(blogImagesDir, filename))) {
         return `/assets/images/blog/${filename}`;
       }
     }
-  } catch (e) {
-    // Fallback safely
-  }
-
-  // 3. Fallback default
+  } catch (e) {}
   return "/assets/images/blog/default.png";
 }
 
 const heroImage = getPostImage(post.data, post.slug);
-
 const metadata = {
   title: `${post.data.title} - KGR33N`,
   description: post.data.description,
   image: heroImage,
 };
-
-const slug = post.slug;
 ---
 
 <Layout metadata={metadata}>
@@ -100,193 +86,6 @@ const slug = post.slug;
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-12" />
-
-    <section id="comments-section" class="mt-12">
-      <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
-        {lang === "pl" ? "Komentarze" : "Comments"}
-      </h3>
-
-      <!-- Comments List -->
-      <div id="comments-list" class="space-y-6 mb-8">
-        <p class="text-gray-500 dark:text-gray-400">
-          {lang === "pl" ? "Ładowanie komentarzy..." : "Loading comments..."}
-        </p>
-      </div>
-
-      <!-- Add Comment Form -->
-      <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
-        <h4 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          {lang === "pl" ? "Dodaj komentarz" : "Add a comment"}
-        </h4>
-        <form id="comment-form" class="space-y-4">
-          <div>
-            <label
-              for="comment-content"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >{lang === "pl" ? "Twój komentarz" : "Your comment"}</label
-            >
-            <textarea
-              id="comment-content"
-              name="content"
-              rows="4"
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm px-4 py-2"
-              placeholder={lang === "pl"
-                ? "Napisz coś..."
-                : "Write something..."}
-              required></textarea>
-          </div>
-          <button
-            type="submit"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {lang === "pl" ? "Wyślij komentarz" : "Post comment"}
-          </button>
-          <div id="form-message" class="hidden mt-2 text-sm"></div>
-        </form>
-      </div>
-    </section>
+    <Comments post_slug={post.slug} lang={lang} />
   </article>
 </Layout>
-
-<script define:vars={{ slug, lang }}>
-  function getApiUrl() {
-    // Simple robust detection for API URL
-    const hostname = window.location.hostname;
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return "http://localhost:8080/api/comments";
-    }
-    // Production / Docker
-    return "/api/comments";
-  }
-
-  const API_BASE = getApiUrl();
-  const commentsList = document.getElementById("comments-list");
-  const commentForm = document.getElementById("comment-form");
-  const formMessage = document.getElementById("form-message");
-
-  function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString(
-      lang === "pl" ? "pl-PL" : "en-US",
-      {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      },
-    );
-  }
-
-  function renderComment(comment) {
-    return `
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-        <div class="flex justify-between items-start mb-2">
-          <div class="flex items-center gap-2">
-            <span class="font-semibold text-gray-900 dark:text-gray-100">${comment.author?.username || (lang === "pl" ? "Użytkownik" : "User")}</span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">${formatDate(comment.created_at)}</span>
-          </div>
-        </div>
-        <div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">${comment.content}</div>
-      </div>
-    `;
-  }
-
-  async function fetchComments() {
-    try {
-      const res = await fetch(`${API_BASE}/${slug}`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error(
-          lang === "pl"
-            ? "Nie udało się pobrać komentarzy"
-            : "Failed to load comments",
-        );
-      }
-      const comments = await res.json();
-
-      if (comments.length === 0) {
-        commentsList.innerHTML =
-          lang === "pl"
-            ? '<p class="text-gray-500 dark:text-gray-400 italic">Brak komentarzy. Bądź pierwszy!</p>'
-            : '<p class="text-gray-500 dark:text-gray-400 italic">No comments yet. Be the first!</p>';
-        return;
-      }
-
-      commentsList.innerHTML = comments.map(renderComment).join("");
-    } catch (err) {
-      console.error(err);
-      commentsList.innerHTML =
-        lang === "pl"
-          ? '<p class="text-red-500">Błąd podczas ładowania komentarzy.</p>'
-          : '<p class="text-red-500">Error loading comments.</p>';
-    }
-  }
-
-  async function handlePostComment(e) {
-    e.preventDefault();
-    const content = document.getElementById("comment-content").value;
-    const btn = e.target.querySelector("button");
-    const originalText = btn.innerText;
-
-    btn.disabled = true;
-    btn.innerText = lang === "pl" ? "Wysyłanie..." : "Sending...";
-    formMessage.classList.add("hidden");
-
-    try {
-      // Note: In strict mode we might need credentials, but user said implementation is good "as is".
-      // The previous code didn't explicitly set credentials but checked 401.
-      // We'll keep it simple as per request.
-      const res = await fetch(`${API_BASE}/${slug}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ content }),
-      });
-
-      if (res.status === 401) {
-        throw new Error(
-          lang === "pl"
-            ? "Musisz być zalogowany, aby dodać komentarz."
-            : "You must be logged in to comment.",
-        );
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(
-          data.detail?.message ||
-            (lang === "pl" ? "Błąd wysyłania" : "Error sending"),
-        );
-      }
-
-      // Success
-      document.getElementById("comment-content").value = "";
-      formMessage.innerText =
-        lang === "pl"
-          ? "Komentarz dodany pomyślnie!"
-          : "Comment posted successfully!";
-      formMessage.className =
-        "mt-2 text-sm text-green-600 dark:text-green-400 block";
-      fetchComments(); // Reload comments
-    } catch (err) {
-      console.error(err);
-      formMessage.innerText = err.message;
-      formMessage.className =
-        "mt-2 text-sm text-red-600 dark:text-red-400 block";
-    } finally {
-      btn.disabled = false;
-      btn.innerText = originalText;
-    }
-  }
-
-  // Load comments on mount
-  fetchComments();
-
-  // Attach listener
-  if (commentForm) {
-    commentForm.addEventListener("submit", handlePostComment);
-  }
-</script>

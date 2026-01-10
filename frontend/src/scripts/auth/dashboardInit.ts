@@ -12,9 +12,9 @@ export function initDashboardPage(lang: string): void {
   }
 
   // Check if we're actually on the dashboard page
-  const requiredElements = ['total-posts', 'published-posts', 'draft-posts'];
+  const requiredElements = ['dashboard-content'];
   const missingElements = requiredElements.filter(id => !document.getElementById(id));
-  
+
   if (missingElements.length > 0) {
     if (import.meta.env.DEV) {
       console.log('Dashboard: Required elements not found, skipping initialization. Missing:', missingElements);

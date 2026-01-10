@@ -1,10 +1,13 @@
-
+"""
+Sync blog posts from .md files to database
+Only creates minimal entries for linking comments to posts via slug
+"""
 import os
 import glob
 import frontmatter
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.models import BlogPost, User, BlogPostTranslation
+from app.models import BlogPost, User
 from datetime import datetime
 
 # Path to mounted content
@@ -14,13 +17,13 @@ def sync_posts():
     print(f"🔄 Starting post synchronization from {CONTENT_DIR}...")
     
     if not os.path.exists(CONTENT_DIR):
-        print(f"❌ Content directory {CONTENT_DIR} not found inside container!")
+        print(f"❌ Content directory {CONTENT_DIR} not found!")
         return
 
     db: Session = SessionLocal()
     
     try:
-        # Get default admin user as author fallback
+        # Get default admin user
         admin = db.query(User).filter(User.username == "admin").first()
         admin_id = admin.id if admin else None
         
@@ -37,58 +40,35 @@ def sync_posts():
                 filename_slug = os.path.splitext(os.path.basename(file_path))[0]
                 slug = data.get('slug', filename_slug)
                 
-                print(f"  Checking post: {slug}")
+                print(f"  Checking: {slug}")
 
                 # Check if exists
-                existing_post = db.query(BlogPost).filter(BlogPost.slug == slug).first()
+                existing = db.query(BlogPost).filter(BlogPost.slug == slug).first()
                 
-                if existing_post:
-                    print(f"  ⏭️  Post {slug} already exists. Skipping.")
+                if existing:
+                    print(f"  ⏭️  {slug} exists. Skipping.")
                     continue
 
-                # Create new post
+                # Create minimal post entry
                 new_post = BlogPost(
                     slug=slug,
-                    author="KGR33N", # Default or from frontmatter
+                    author="KGR33N",
                     author_id=admin_id,
-                    is_published=True,
-                    published_at=data.get('pubDate', datetime.now()),
                     created_at=data.get('pubDate', datetime.now()),
-                    featured_image=data.get('heroImage', ''),
                     category="general"
                 )
                 db.add(new_post)
-                db.flush() # Get ID
-
-                # Create translation entry (minimal metadata, NO content)
-                # We assume the content is managed by static files/Astro.
-                # However, for the 'Comment' relationship to work, we just need the BlogPost entry.
-                # The translation entry is technically optional for comments, but required if the old system expects it for listing.
-                # Since we replaced the listing logic in Astro to use 'getCollection', the DB translation entries are 
-                # mainly unused unless there's some legacy backend Admin UI dependency.
-                # We'll populate minimal data for consistency.
                 
-                translation = BlogPostTranslation(
-                    post_id=new_post.id,
-                    language_code="pl", # Defaulting to PL
-                    title=data.get('title', 'No Title'),
-                    content="", # User requested NO content in DB
-                    excerpt=data.get('description', ''),
-                    meta_title=data.get('title', ''),
-                    meta_description=data.get('description', '')
-                )
-                db.add(translation)
-                
-                print(f"  ✅ Created post slug: {slug}")
+                print(f"  ✅ Created: {slug}")
                 
             except Exception as e:
-                print(f"  ❌ Error processing {file_path}: {e}")
+                print(f"  ❌ Error with {file_path}: {e}")
 
         db.commit()
-        print("✅ Synchronization complete.")
+        print("✅ Sync complete.")
 
     except Exception as e:
-        print(f"❌ Fatal error during sync: {e}")
+        print(f"❌ Error: {e}")
         db.rollback()
     finally:
         db.close()

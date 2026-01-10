@@ -31,7 +31,7 @@ export function getFrontendUrl(): string {
 export const API_URLS = {
   // System endpoints
   health: () => `${API_CONFIG.baseUrl}/api/health`,
-  
+
   // Blog endpoints (nowa wielojęzyczna struktura)
   getAllPosts: (params?: {
     limit?: number;
@@ -57,7 +57,7 @@ export const API_URLS = {
     }
     return url.toString();
   },
-  
+
   // Single post endpoints (nowa struktura)
   getPost: (id: number) => `${API_CONFIG.blog}/${id}`,
   getPostBySlug: (slug: string, params?: { language?: string }) => {
@@ -67,19 +67,19 @@ export const API_URLS = {
     }
     return url.toString();
   },
-  
+
   // Post management (wielojęzyczne)
   createPost: () => `${API_CONFIG.blog}/`,
   updatePost: (id: number) => `${API_CONFIG.blog}/${id}`,
   publishPost: (id: number) => `${API_CONFIG.blog}/${id}/publish`,
   unpublishPost: (id: number) => `${API_CONFIG.blog}/${id}/unpublish`,
   deletePost: (id: number) => `${API_CONFIG.blog}/${id}`,
-  
+
   // Translation management
   addTranslation: (postId: number) => `${API_CONFIG.blog}/${postId}/translations`,
   updateTranslation: (postId: number, languageCode: string) => `${API_CONFIG.blog}/${postId}/translations/${languageCode}`,
   deleteTranslation: (postId: number, languageCode: string) => `${API_CONFIG.blog}/${postId}/translations/${languageCode}`,
-  
+
   // Comments endpoints
   getComments: (postId: number, params?: {
     page?: number;
@@ -96,18 +96,17 @@ export const API_URLS = {
     }
     return url.toString();
   },
-  createComment: (postId: number) => `${API_CONFIG.blog}/${postId}/comments`,
-  updateComment: (postId: number, commentId: number) => `${API_CONFIG.blog}/${postId}/comments/${commentId}`,
-  deleteComment: (postId: number, commentId: number) => `${API_CONFIG.blog}/${postId}/comments/${commentId}`,
-  approveComment: (postId: number, commentId: number) => `${API_CONFIG.blog}/${postId}/comments/${commentId}/approve`,
-  
-  // New Comments API endpoints (using /api/comments structure)
-  getPostComments: (postId: number, params?: {
+  createComment: (post_slug: string) => `${API_CONFIG.blog}/${post_slug}/comments`,
+  updateComment: (post_slug: string, commentId: number) => `${API_CONFIG.blog}/${post_slug}/comments/${commentId}`,
+  deleteComment: (post_slug: string, commentId: number) => `${API_CONFIG.blog}/${post_slug}/comments/${commentId}`,
+  approveComment: (post_slug: string, commentId: number) => `${API_CONFIG.blog}/${post_slug}/comments/${commentId}/approve`,
+
+  getPostComments: (post_slug: string, params?: {
     page?: number;
     per_page?: number;
     approved?: boolean;
   }) => {
-    const url = new URL(`${API_CONFIG.comments}/post/${postId}`);
+    const url = new URL(`${API_CONFIG.comments}/${post_slug}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -117,12 +116,12 @@ export const API_URLS = {
     }
     return url.toString();
   },
-  createPostComment: (postId: number) => `${API_CONFIG.comments}/post/${postId}`,
+  createPostComment: (post_slug: string) => `${API_CONFIG.comments}/${post_slug}`,
   updatePostComment: (commentId: number) => `${API_CONFIG.comments}/${commentId}`,
   deletePostComment: (commentId: number) => `${API_CONFIG.comments}/${commentId}`,
   likeComment: (commentId: number) => `${API_CONFIG.comments}/${commentId}/like`,
   approvePostComment: (commentId: number) => `${API_CONFIG.comments}/${commentId}/approve`,
-  
+
   // Auth endpoints
   login: () => `${API_CONFIG.auth}/login`,
   logout: () => `${API_CONFIG.auth}/logout`,
@@ -136,15 +135,15 @@ export const API_URLS = {
   updateProfile: () => `${API_CONFIG.auth}/update-profile`,
   updatePassword: () => `${API_CONFIG.auth}/update-password`,
   deleteAccount: () => `${API_CONFIG.auth}/delete-account`,
-  
+
   // Password Reset endpoints
   passwordResetRequest: () => `${API_CONFIG.auth}/password-reset-request`,
   passwordResetConfirm: () => `${API_CONFIG.auth}/password-reset-confirm`,
-  
+
   // Admin endpoints
   dashboard: () => `${API_CONFIG.admin}/dashboard`,
   stats: () => `${API_CONFIG.admin}/stats`,
-  
+
   // Admin blog endpoints (nowa struktura - dostęp do wszystkich postów i drafts)
   getAdminPosts: (params?: {
     page?: number;
@@ -164,25 +163,24 @@ export const API_URLS = {
     return url.toString();
   },
   getAdminPost: (id: number) => `${API_CONFIG.blog}/${id}`,
-  
-  // Language management endpoints
-  getLanguages: (activeOnly = true) => {
-    const url = new URL(`${API_CONFIG.baseUrl}/api/languages/`);
-    url.searchParams.append('active_only', activeOnly.toString());
+  getPublicPosts: (params?: {
+    page?: number;
+    per_page?: number;
+    status?: 'published';
+    language?: string;
+    category?: string;
+  }) => {
+    const url = new URL(`${API_CONFIG.blog}/posts`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.append(key, value.toString());
+        }
+      });
+    }
     return url.toString();
   },
-  getLanguageCodes: (activeOnly = true) => {
-    const url = new URL(`${API_CONFIG.baseUrl}/api/languages/codes`);
-    url.searchParams.append('active_only', activeOnly.toString());
-    return url.toString();
-  },
-  getLanguage: (code: string) => `${API_CONFIG.baseUrl}/api/languages/${code}`,
-  createLanguage: () => `${API_CONFIG.baseUrl}/api/languages/`,
-  updateLanguage: (code: string) => `${API_CONFIG.baseUrl}/api/languages/${code}`,
-  deleteLanguage: (code: string) => `${API_CONFIG.baseUrl}/api/languages/${code}`,
-  activateLanguage: (code: string) => `${API_CONFIG.baseUrl}/api/languages/${code}/activate`,
-  deactivateLanguage: (code: string) => `${API_CONFIG.baseUrl}/api/languages/${code}/deactivate`,
-  getLanguageStats: () => `${API_CONFIG.baseUrl}/api/languages/stats/usage`,
+  getPublicPost: (id: number) => `${API_CONFIG.blog}/${id}`,
 } as const;
 
 // Development debugging status
@@ -195,36 +193,36 @@ if (import.meta.env.DEV) {
 // Utility functions for common API calls
 export const BlogAPI = {
   // Filtrowanie po tagach
-  getPostsByTags: (tags: string[], limit?: number) => 
-    API_URLS.getAllPosts({ 
-      tags: tags.join(','), 
+  getPostsByTags: (tags: string[], limit?: number) =>
+    API_URLS.getAllPosts({
+      tags: tags.join(','),
       limit,
-      published: true 
+      published: true
     }),
-  
+
   // Konkretne posty
-  getPostsByIds: (ids: number[]) => 
-    API_URLS.getAllPosts({ 
-      ids: ids.join(',') 
+  getPostsByIds: (ids: number[]) =>
+    API_URLS.getAllPosts({
+      ids: ids.join(',')
     }),
-  
+
   // Sortowanie
   getPostsSorted: (sortBy: 'published_at' | 'created_at' | 'title' = 'published_at', order: 'asc' | 'desc' = 'desc', limit?: number) =>
-    API_URLS.getAllPosts({ 
-      sort: sortBy, 
-      order, 
+    API_URLS.getAllPosts({
+      sort: sortBy,
+      order,
       limit,
-      published: true 
+      published: true
     }),
-  
+
   // Posty dla konkretnego języka
   getPostsByLanguage: (language: string, limit?: number) =>
-    API_URLS.getAllPosts({ 
-      language, 
+    API_URLS.getAllPosts({
+      language,
       limit,
-      published: true 
+      published: true
     }),
-  
+
   // Kombinacja filtrów
   getPostsFiltered: (filters: {
     tags?: string[];

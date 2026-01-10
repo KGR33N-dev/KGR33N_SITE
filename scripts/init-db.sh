@@ -5,7 +5,6 @@
 #
 # This script initializes the database with:
 # - Alembic migrations
-# - Default languages (English, Polish)
 # - Default roles and ranks
 # - Admin user
 #
@@ -170,8 +169,8 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo -e "  ${BLUE}Initialized:${NC}"
 echo -e "    • Alembic migrations applied"
-echo -e "    • Default languages (EN, PL)"
 echo -e "    • User roles (User, Moderator, Admin)"
 echo -e "    • User ranks (Newbie → VIP)"
 echo -e "    • Admin user account"
+echo -e "    • Blog posts synced from markdown"
 echo ""

@@ -39,7 +39,7 @@ export class DebouncedLikes {
 
   async debouncedToggleLike(commentId: number, action: 'like' | 'dislike', delay: number = 500): Promise<void> {
     console.log(`🎯 DebouncedLikes.debouncedToggleLike: commentId=${commentId}, action=${action}`);
-    
+
     // Clear any existing timer for this comment
     if (this.debounceTimers.has(commentId)) {
       clearTimeout(this.debounceTimers.get(commentId)!);
@@ -49,9 +49,9 @@ export class DebouncedLikes {
     // Get current UI state
     const likeBtn = document.querySelector(`[data-action="like"][data-id="${commentId}"]`) as HTMLElement;
     const dislikeBtn = document.querySelector(`[data-action="dislike"][data-id="${commentId}"]`) as HTMLElement;
-    
+
     console.log(`🔍 Found buttons:`, { likeBtn: !!likeBtn, dislikeBtn: !!dislikeBtn });
-    
+
     if (!likeBtn || !dislikeBtn) {
       console.error(`❌ Buttons not found for comment ${commentId}`);
       return;
@@ -68,7 +68,7 @@ export class DebouncedLikes {
     const currentState = likeBtn.dataset.currentState;
     const currentLikes = parseInt((likeBtn.querySelector('.like-count') as HTMLElement)?.textContent || '0') || 0;
     const currentDislikes = parseInt((dislikeBtn.querySelector('.dislike-count') as HTMLElement)?.textContent || '0') || 0;
-    
+
     console.log(`📊 Current state: ${currentState}, likes: ${currentLikes}, dislikes: ${currentDislikes}`);
 
     // Calculate optimistic state with improved logic
@@ -164,7 +164,7 @@ export class DebouncedLikes {
     // Update counts
     const likeCount = likeBtn.querySelector('.like-count') as HTMLElement;
     const dislikeCount = dislikeBtn.querySelector('.dislike-count') as HTMLElement;
-    
+
     if (likeCount) likeCount.textContent = likes.toString();
     if (dislikeCount) dislikeCount.textContent = dislikes.toString();
 
@@ -179,11 +179,11 @@ export class DebouncedLikes {
     // Update SVG fill states
     const likeSvg = likeBtn.querySelector('svg');
     const dislikeSvg = dislikeBtn.querySelector('svg');
-    
+
     if (likeSvg) {
       likeSvg.setAttribute('fill', likeIsActive ? 'currentColor' : 'none');
     }
-    
+
     if (dislikeSvg) {
       dislikeSvg.setAttribute('fill', dislikeIsActive ? 'currentColor' : 'none');
     }
@@ -208,10 +208,10 @@ export class DebouncedLikes {
       // Use API_URLS helper function instead of constructing URL manually
       const { API_URLS } = await import('~/config/api');
       const url = API_URLS.likeComment(commentId);
-      
+
       console.log(`📡 Sending ${action} request for comment ${commentId} to: ${url}`);
       console.log(`📤 Request body:`, { is_like: likeState === true });
-      
+
       // Use AuthHelper for automatic token refresh
       const response = await AuthHelper.makeAuthenticatedRequest(url, {
         method: 'POST',
@@ -234,12 +234,12 @@ export class DebouncedLikes {
           console.error('❌ Failed to parse error response:', parseError);
           errorData = {};
         }
-        
+
         // Handle specific error codes
         if (errorData.detail?.translation_code === 'SELF_LIKE_ERROR') {
           throw new Error('SELF_LIKE_ERROR');
         }
-        
+
         throw new Error(errorData.detail?.message || errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -262,7 +262,7 @@ export class DebouncedLikes {
   private revertUIChanges(commentId: number): void {
     // Find original state before optimistic update
     console.log(`🔄 Reverting UI changes for comment ${commentId}`);
-    
+
     const pendingState = this.pendingStates.get(commentId);
     if (!pendingState) {
       console.warn(`⚠️ No pending state found for comment ${commentId}, cannot revert`);
@@ -270,19 +270,19 @@ export class DebouncedLikes {
     }
 
     const { originalState, originalLikes, originalDislikes, likeBtn, dislikeBtn } = pendingState;
-    
+
     if (likeBtn && dislikeBtn && originalState !== undefined && originalLikes !== undefined && originalDislikes !== undefined) {
       // Parse original state back to boolean | null
       const originalLikeState = originalState === 'true' ? true : originalState === 'false' ? false : null;
-      
+
       // Revert to original state
       this.updateLikeButtonsUI(commentId, originalLikeState, originalLikes, originalDislikes);
-      
+
       console.log(`✅ Reverted comment ${commentId} to original state: ${originalState}, likes: ${originalLikes}, dislikes: ${originalDislikes}`);
     } else {
       console.warn(`⚠️ Missing revert data for comment ${commentId}`);
     }
-    
+
     // Remove pending state
     this.pendingStates.delete(commentId);
   }
@@ -297,15 +297,15 @@ export class DebouncedLikes {
 
 // Handler function for like/dislike actions
 export async function handleLikeDislike(
-  commentId: number, 
-  action: 'like' | 'dislike', 
-  currentUser: User | null, 
+  commentId: number,
+  action: 'like' | 'dislike',
+  currentUser: User | null,
   translations: Translations,
   debouncedLikes: DebouncedLikes,
   showError: (message: string) => void
 ): Promise<void> {
   console.log(`🎯 handleLikeDislike: commentId=${commentId}, action=${action}`);
-  
+
   if (!currentUser) {
     const errorMsg = translations['comments.loginRequired'] || 'You must be logged in to vote';
     console.log('❌ User not logged in');
@@ -328,7 +328,7 @@ export async function handleLikeDislike(
   // Check if user is trying to like/dislike their own comment
   const button = document.querySelector(`[data-action="${action}"][data-id="${commentId}"]`) as HTMLElement;
   const authorId = button?.dataset.authorId;
-  
+
   if (authorId && parseInt(authorId) === currentUser.id) {
     console.log('ℹ️ User clicked on their own comment like/dislike button - ignoring action');
     // Simply return without doing anything or showing error
@@ -342,7 +342,7 @@ export async function handleLikeDislike(
     console.log(`✅ ${action} processed successfully for comment ${commentId}`);
   } catch (error) {
     console.error(`❌ Error processing ${action} for comment ${commentId}:`, error);
-    
+
     if ((error as Error).message === 'SELF_LIKE_ERROR') {
       const errorMsg = translations['comments.selfLikeError'] || 'Nie możesz polubić własnego komentarza';
       showError(errorMsg);
@@ -364,18 +364,16 @@ export function disableOwnCommentButtons(currentUser: User | null, translations?
   [...likeButtons, ...dislikeButtons].forEach(button => {
     const htmlButton = button as HTMLElement;
     const authorId = htmlButton.dataset.authorId;
-    
+
     if (authorId && parseInt(authorId) === currentUser.id) {
       // Disable the button and add visual indicator
       htmlButton.style.opacity = '0.5';
       htmlButton.style.cursor = 'not-allowed';
       htmlButton.style.pointerEvents = 'none';
-      
+
       // Add a title attribute for tooltip with translation support
       const tooltipText = translations?.['comments.ownCommentTooltip'] || 'You cannot like/dislike your own comment';
       htmlButton.title = tooltipText;
-      
-      console.log(`🚫 Disabled like/dislike button for own comment ID: ${htmlButton.dataset.id}`);
     }
   });
 }

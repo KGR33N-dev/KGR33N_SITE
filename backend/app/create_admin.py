@@ -65,10 +65,7 @@ def create_admin_user():
     
     # Always initialize basic data
     print("🌱 Inicjalizacja podstawowych danych...")
-    
-    print("🌍 Inicjalizacja języków...")
-    from app.database import init_roles_and_ranks, init_default_languages
-    init_default_languages()
+    from app.database import init_roles_and_ranks
     
     print("👥 Inicjalizacja ról i rang...")
     init_roles_and_ranks()
