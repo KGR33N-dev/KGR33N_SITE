@@ -77,6 +77,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Development API URLs - override production defaults
+        PUBLIC_API_URL: http://localhost:8080
+        PUBLIC_FRONTEND_URL: http://localhost:4321
+        PUBLIC_ENVIRONMENT: development
     container_name: kgr33n-frontend
     ports:
       - "4321:80"
@@ -89,6 +94,7 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
 
   # ============================================
   # OPTIONAL: Adminer (Database GUI)

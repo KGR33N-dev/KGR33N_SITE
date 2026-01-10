@@ -18,12 +18,24 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Build arguments for environment configuration
+# These are injected at build time via docker-compose or CI/CD
+ARG PUBLIC_API_URL=https://api.kgr33n.com
+ARG PUBLIC_FRONTEND_URL=https://kgr33n.com
+ARG PUBLIC_ENVIRONMENT=production
+
+# Set environment variables for the build process
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
+ENV PUBLIC_FRONTEND_URL=$PUBLIC_FRONTEND_URL
+ENV PUBLIC_ENVIRONMENT=$PUBLIC_ENVIRONMENT
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the Astro application
 RUN npm run build
+
 
 # ================================
 # STAGE 3: Production Runtime (nginx)
