@@ -43,8 +43,9 @@ resource "cloudflare_zone_settings_override" "ssl_settings" {
   zone_id = var.cloudflare_zone_id
 
   settings {
-    # SSL Mode: Full (strict) - validates origin certificate
-    ssl                      = "full"
+    # SSL Mode: Flexible - Encrypts User<->Cloudflare, but Cloudflare<->Origin is HTTP
+    # Easier to set up as you don't need certs on K3s/EC2
+    ssl                      = "flexible"
     always_use_https         = "on"
     automatic_https_rewrites = "on"
     min_tls_version          = "1.2"

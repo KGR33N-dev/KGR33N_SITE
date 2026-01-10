@@ -65,6 +65,29 @@ output "kubeconfig_instructions" {
   EOT
 }
 
+  EOT
+}
+
+# -----------------------------------------------------------------------------
+# BACKUP CREDENTIALS
+# -----------------------------------------------------------------------------
+
+output "backup_bucket_name" {
+  description = "S3 Bucket for backups"
+  value       = aws_s3_bucket.backups.id
+}
+
+output "backup_aws_access_key" {
+  description = "Access Key for backup bot"
+  value       = aws_iam_access_key.backup_user.id
+}
+
+output "backup_aws_secret_key" {
+  description = "Secret Key for backup bot"
+  value       = aws_iam_access_key.backup_user.secret
+  sensitive   = true
+}
+
 # -----------------------------------------------------------------------------
 # NEXT STEPS
 # -----------------------------------------------------------------------------

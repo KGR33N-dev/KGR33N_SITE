@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup-s3
+  namespace: kgr33n
+spec:
+  # Run daily at 02:00 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: alpine:3.19
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "📦 Starting database backup..."
+
+                  # Install dependencies
+                  apk add --no-cache postgresql16-client aws-cli
+
+                  # Timestamp for filename
+                  TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+                  FILENAME="backup_${TIMESTAMP}.sql.gz"
+
+                  echo "💾 Dumping database..."
+                  PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h postgres -U $POSTGRES_USER -d $POSTGRES_DB | gzip > /tmp/$FILENAME
+
+                  echo "☁️ Uploading to S3..."
+                  aws s3 cp /tmp/$FILENAME s3://$S3_BUCKET_NAME/$FILENAME
+
+                  echo "✅ Backup completed: s3://$S3_BUCKET_NAME/$FILENAME"
+              env:
+                - name: POSTGRES_USER
+                  value: kgr33n
+                - name: POSTGRES_DB
+                  value: kgr33n_prod
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-env
+                      key: POSTGRES_PASSWORD
+                      optional: true
+                # Need to create this secret with AWS credentials from Terraform output
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-secrets
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-secrets
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: AWS_DEFAULT_REGION
+                  value: eu-central-1
+                - name: S3_BUCKET_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-secrets
+                      key: S3_BUCKET_NAME
+          restartPolicy: OnFailure
