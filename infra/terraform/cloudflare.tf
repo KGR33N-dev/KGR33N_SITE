@@ -20,10 +20,11 @@ resource "cloudflare_record" "www" {
   zone_id = var.cloudflare_zone_id
   name    = "www"
   value   = var.domain
-  type    = "CNAME"
+  value   = aws_eip.k3s_server.public_ip
+  type    = "A"
   ttl     = 1
   proxied = var.cloudflare_proxy_enabled
-  comment = "Managed by Terraform - www subdomain"
+  comment = "Managed by Terraform - points to AWS EC2 Elastic IP"
 }
 
 # Optional: API subdomain (if you want api.kgr33n.com)
