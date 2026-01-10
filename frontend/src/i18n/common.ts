@@ -13,6 +13,11 @@ export const commonTranslations = {
     'nav.downloadCV': 'Download CV',
     'nav.downloadCVEN': 'Download CV (EN)',
     'nav.downloadCVPL': 'Download CV (PL)',
+    'nav.login': 'Log In',
+    'nav.profile': 'Profile',
+    'nav.account': 'Account',
+    'nav.admin': 'Admin Panel',
+    'nav.logout': 'Logout',
 
     // ===== META DATA =====
     'meta.title': 'Krzysztof Głuchowski - Python Developer',
@@ -42,6 +47,11 @@ export const commonTranslations = {
     'nav.downloadCV': 'Pobierz CV',
     'nav.downloadCVEN': 'Pobierz CV (EN)',
     'nav.downloadCVPL': 'Pobierz CV (PL)',
+    'nav.login': 'Zaloguj',
+    'nav.profile': 'Profil',
+    'nav.account': 'Konto',
+    'nav.admin': 'Panel Admina',
+    'nav.logout': 'Wyloguj',
 
     // ===== META DANE =====
     'meta.title': 'Krzysztof Głuchowski - Programista Python',

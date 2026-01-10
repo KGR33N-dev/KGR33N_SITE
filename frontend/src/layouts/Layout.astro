@@ -52,5 +52,9 @@ const language = getLangFromUrl(Astro.url);
     <slot />
 
     <BasicScripts />
+    
+    <script>
+      import '~/scripts/global-app';
+    </script>
   </body>
 </html>

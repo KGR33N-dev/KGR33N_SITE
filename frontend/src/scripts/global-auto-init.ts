@@ -20,32 +20,32 @@ interface PageInitializer {
 class AutoPageInitializer {
   private initializers: PageInitializer[] = [
     {
-      pattern: /^\/[a-z]{2}\/register\/?$/,
+      pattern: /^\/[a-z]{2}\/register\/?([?#].*)?$/,
       init: initRegisterPage,
       name: 'register'
     },
     {
-      pattern: /^\/[a-z]{2}\/login\/?$/,
+      pattern: /^\/[a-z]{2}\/login\/?([?#].*)?$/,
       init: initLoginPage,
       name: 'login'
     },
     {
-      pattern: /^\/[a-z]{2}\/forgot-password\/?$/,
+      pattern: /^\/[a-z]{2}\/forgot-password\/?([?#].*)?$/,
       init: initForgotPasswordPage,
       name: 'forgot-password'
     },
     {
-      pattern: /^\/[a-z]{2}\/reset-password\/?$/,
+      pattern: /^\/[a-z]{2}\/reset-password\/?([?#].*)?$/,
       init: initResetPasswordPage,
       name: 'reset-password'
     },
     {
-      pattern: /^\/[a-z]{2}\/verify-email\/?$/,
+      pattern: /^\/[a-z]{2}\/verify-email\/?([?#].*)?$/,
       init: initVerifyEmailPage,
       name: 'verify-email'
     },
     {
-      pattern: /^\/[a-z]{2}\/admin\/dashboard\/?$/,
+      pattern: /^\/[a-z]{2}\/admin\/dashboard\/?([?#].*)?$/,
       init: initDashboardPage,
       name: 'dashboard'
     },
@@ -67,7 +67,7 @@ class AutoPageInitializer {
 
     // Auto-detect and initialize on page load
     document.addEventListener('astro:page-load', this.autoInitialize.bind(this));
-    
+
     // Initial load
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', this.autoInitialize.bind(this));
@@ -86,7 +86,7 @@ class AutoPageInitializer {
     const lang = pathname.split('/')[1] || 'en';
 
     // Find matching initializer
-    const matchedInitializer = this.initializers.find(init => 
+    const matchedInitializer = this.initializers.find(init =>
       init.pattern.test(pathname)
     );
 

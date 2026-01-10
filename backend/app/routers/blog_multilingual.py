@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import re
 
 from ..database import get_db
-from ..models import BlogPost, BlogPostTranslation, BlogTag, User, Language
+from ..models import BlogPost, BlogPostTranslation, BlogTag, User, Language, Comment
 from ..schemas import (
     BlogPostCreate, BlogPostUpdate, BlogPostPublic, BlogPostAdmin, 
     BlogPostSingleLanguage, BlogPostTranslationCreate, BlogPostTranslationUpdate,
@@ -462,6 +462,9 @@ async def get_admin_blog_posts(
     # Convert posts to response format with admin details
     posts_data = []
     for post in posts:
+        # Count comments for this post by slug
+        comment_count = db.query(Comment).filter(Comment.post_slug == post.slug).count()
+        
         post_dict = {
             "id": post.id,
             "slug": post.slug,
@@ -473,6 +476,7 @@ async def get_admin_blog_posts(
             "updated_at": post.updated_at,
             "is_published": post.is_published,
             "published_at": post.published_at,
+            "comment_count": comment_count,
             "tags": [tag.tag_name for tag in post.tags] if post.tags else [],
             "translations": [
                 {

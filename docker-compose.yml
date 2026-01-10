@@ -59,6 +59,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./frontend/src/content/blog:/app/content_blog:ro,z
     # Note: For hot-reload in dev, you can run backend directly with:
     #   cd backend && python -m uvicorn app.main:app --reload --port 8080
     # The Docker container uses the built-in code from the image

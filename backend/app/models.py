@@ -95,7 +95,7 @@ class BlogPost(Base):
     tags = relationship("BlogTag", back_populates="post")
     author_user = relationship("User", back_populates="blog_posts")
     translations = relationship("BlogPostTranslation", back_populates="post", cascade="all, delete-orphan")
-    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+    # comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
 
 class BlogPostTranslation(Base):
     __tablename__ = "blog_post_translations"
@@ -279,7 +279,7 @@ class Comment(Base):
     __tablename__ = "comments"
     
     id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(Integer, ForeignKey("blog_posts.id", ondelete="CASCADE"), nullable=False)
+    post_slug = Column(String(200), index=True, nullable=False)  # Link to static post slug
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     parent_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True)  # For replies
     
@@ -297,7 +297,6 @@ class Comment(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     
     # Relationships
-    post = relationship("BlogPost", back_populates="comments")
     user = relationship("User", back_populates="comments")
     parent = relationship("Comment", remote_side=[id], back_populates="replies")
     replies = relationship("Comment", back_populates="parent", cascade="all, delete-orphan")

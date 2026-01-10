@@ -92,7 +92,7 @@ def build_comment_response(comment: Comment, current_user: Optional[User] = None
     
     comment_data = {
         "id": comment.id,
-        "post_id": comment.post_id,
+        "post_slug": comment.post_slug,
         "user_id": comment.user_id,
         "parent_id": comment.parent_id,
         "content": comment.content if not comment.is_deleted else "[Komentarz został usunięty]",
@@ -116,9 +116,9 @@ def build_comment_response(comment: Comment, current_user: Optional[User] = None
     
     return comment_data
 
-@router.get("/post/{post_id}", response_model=List[dict])
+@router.get("/{post_slug}", response_model=List[dict])
 async def get_post_comments(
-    post_id: int,
+    post_slug: str,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional),
     page: int = Query(1, ge=1),
@@ -129,14 +129,6 @@ async def get_post_comments(
 ):
     """Pobierz komentarze dla posta"""
     
-    # Check if post exists
-    post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
-    if not post:
-        raise HTTPException(
-            status_code=404, 
-            detail={"translation_code": "POST_NOT_FOUND", "message": "Post not found"}
-        )
-    
     # Base query - only top-level comments (no parent)
     # Eager load user with role and rank to avoid N+1 queries
     query = db.query(Comment).options(
@@ -146,7 +138,7 @@ async def get_post_comments(
         joinedload(Comment.replies).joinedload(Comment.user).joinedload(User.role),
         joinedload(Comment.replies).joinedload(Comment.user).joinedload(User.rank)
     ).filter(
-        Comment.post_id == post_id,
+        Comment.post_slug == post_slug,
         Comment.parent_id.is_(None)
     )
     
@@ -181,9 +173,9 @@ async def get_post_comments(
     
     return comments_data
 
-@router.post("/post/{post_id}", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("/{post_slug}", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_comment(
-    post_id: int,
+    post_slug: str,
     comment_data: CommentCreate,
     request: Request,
     db: Session = Depends(get_db),
@@ -191,22 +183,11 @@ async def create_comment(
 ):
     """Dodaj komentarz do posta (tylko zalogowani użytkownicy)"""
     
-    # Check if post exists and is published
-    post = db.query(BlogPost).filter(
-        BlogPost.id == post_id,
-        BlogPost.is_published == True
-    ).first()
-    if not post:
-        raise HTTPException(
-            status_code=404, 
-            detail={"translation_code": "POST_NOT_FOUND", "message": "Post not found or not published"}
-        )
-    
     # Check if parent comment exists (for replies)
     if comment_data.parent_id:
         parent_comment = db.query(Comment).filter(
             Comment.id == comment_data.parent_id,
-            Comment.post_id == post_id
+            Comment.post_slug == post_slug
         ).first()
         if not parent_comment:
             raise HTTPException(
@@ -220,8 +201,9 @@ async def create_comment(
                 status_code=400,
                 detail={"translation_code": "MAX_COMMENT_DEPTH", "message": "Nie można odpowiadać na odpowiedzi. Maksymalnie 2 poziomy komentarzy."}
             )    # Create comment (tylko dla zalogowanych użytkowników)
+            
     new_comment = Comment(
-        post_id=post_id,
+        post_slug=post_slug,
         user_id=current_user.id,  # Wymagane - użytkownik musi być zalogowany
         parent_id=comment_data.parent_id,
         content=comment_data.content,
@@ -469,35 +451,27 @@ async def get_comment_replies(
     
     return replies_data
 
-@router.get("/stats/{post_id}")
+@router.get("/stats/{post_slug}")
 async def get_post_comment_stats(
-    post_id: int,
+    post_slug: str,
     db: Session = Depends(get_db)
 ):
     """Pobierz statystyki komentarzy dla posta"""
     
-    # Check if post exists
-    post = db.query(BlogPost).filter(BlogPost.id == post_id).first()
-    if not post:
-        raise HTTPException(
-            status_code=404, 
-            detail={"translation_code": "POST_NOT_FOUND", "message": "Post not found"}
-        )
-    
     # Get stats
     total_comments = db.query(Comment).filter(
-        Comment.post_id == post_id,
+        Comment.post_slug == post_slug,
         Comment.is_deleted == False
     ).count()
     
     total_replies = db.query(Comment).filter(
-        Comment.post_id == post_id,
+        Comment.post_slug == post_slug,
         Comment.parent_id.isnot(None),
         Comment.is_deleted == False
     ).count()
     
     return {
-        "post_id": post_id,
+        "post_slug": post_slug,
         "total_comments": total_comments,
         "total_replies": total_replies,
         "total_interactions": total_comments

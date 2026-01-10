@@ -257,7 +257,7 @@ class CommentLikeCreate(BaseModel):
 
 class Comment(BaseModel):
     id: int
-    post_id: int
+    post_slug: str
     user_id: int
     parent_id: Optional[int] = None
     content: str

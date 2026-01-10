@@ -12,7 +12,7 @@ interface User {
   is_active: boolean;
   email_verified: boolean;
   created_at: string;
-  
+
   // Informacje o roli i randze
   role: {
     id: number;
@@ -22,7 +22,7 @@ interface User {
     permissions: string[];
     level: number;
   } | null;
-  
+
   rank: {
     id: number;
     name: string; // "newbie" | "regular" | "trusted" | "star" | "legend" | "vip"
@@ -31,13 +31,13 @@ interface User {
     color: string;
     level: number;
   } | null;
-  
+
   // Statystyki
   total_comments: number;
   total_likes_received: number;
   total_posts: number;
   reputation_score: number;
-  
+
   // Pola pomocnicze
   display_role: string | null;
   display_rank: string | null;
@@ -121,7 +121,7 @@ export class AdminAuth {
   // User verification cache to prevent duplicate API calls
   private static verificationCache: { user: User | null; timestamp: number } | null = null;
   private static readonly CACHE_TTL = 5000; // 5 seconds cache
-  
+
   // Since tokens are now HTTP-only cookies, we can't access them from JavaScript
   // Authentication status is determined by successful API calls
   static isAuthenticated(): boolean {
@@ -129,18 +129,18 @@ export class AdminAuth {
     if (this.verificationCache && (Date.now() - this.verificationCache.timestamp) < this.CACHE_TTL) {
       return this.verificationCache.user !== null;
     }
-    
+
     // If no recent cache, assume not authenticated
     // The actual check will happen when verifyUser() is called
     return false;
   }
-  
+
   // Since tokens are HTTP-only, this method is no longer needed
   static getToken(): string | null {
     // Tokens are not accessible from JavaScript anymore
     return null;
   }
-  
+
   static async logout(): Promise<void> {
     try {
       // Call backend logout endpoint to clear HTTP-only cookies
@@ -156,20 +156,20 @@ export class AdminAuth {
         console.warn('Logout request failed, but continuing with client cleanup:', error);
       }
     }
-    
+
     // Clear verification cache
     this.verificationCache = null;
-    
+
     // Redirect to login
     const currentLang = window.location.pathname.split('/')[1] || 'en';
     window.location.href = `/${currentLang}/login`;
   }
-  
+
   static async login(email: string, password: string): Promise<User> {
     const formData = new URLSearchParams();
     formData.append('username', email); // API expects 'username' field, not 'email'
     formData.append('password', password);
-    
+
     const response = await fetch(API_URLS.login(), {
       method: 'POST',
       credentials: 'include', // Important: include cookies for HTTP-only token setting
@@ -178,11 +178,11 @@ export class AdminAuth {
       },
       body: formData.toString(),
     });
-    
+
     if (!response.ok) {
       try {
         const errorData = await response.json();
-        
+
         // Preserve the API error structure for proper error handling
         if (errorData.detail?.error_code || errorData.detail?.translation_code) {
           // Throw error with the same structure as API response
@@ -194,7 +194,7 @@ export class AdminAuth {
         } else {
           // Fallback for old error format
           let errorMessage = 'Login failed';
-          
+
           if (response.status === 429) {
             errorMessage = errorData.detail || 'Too many login attempts. Please try again later.';
           } else if (response.status === 401) {
@@ -206,7 +206,7 @@ export class AdminAuth {
           } else {
             errorMessage = errorData.detail || errorData.message || `Server error (${response.status})`;
           }
-          
+
           throw new Error(errorMessage);
         }
       } catch (error) {
@@ -219,19 +219,19 @@ export class AdminAuth {
         }
       }
     }
-    
+
     const data: LoginResponse = await response.json();
-    
+
     if (import.meta.env.DEV) {
       console.log('🔐 Login Success Debug:');
       console.log('Response data:', data);
       console.log('User data:', data.user);
       console.log('Tokens are now set as HTTP-only cookies by the server');
     }
-    
+
     // Clear any old cache and set new user data
     this.verificationCache = { user: data.user, timestamp: Date.now() };
-    
+
     return data.user;
   }
 
@@ -242,11 +242,11 @@ export class AdminAuth {
       const age = Date.now() - this.verificationCache.timestamp;
       if (age < this.CACHE_TTL) {
         if (import.meta.env.DEV) {
-          console.log('🎯 Using cached user verification (age: ' + Math.round(age/1000) + 's)');
+          console.log('🎯 Using cached user verification (age: ' + Math.round(age / 1000) + 's)');
         }
         return this.verificationCache.user;
       } else if (import.meta.env.DEV) {
-        console.log('🕐 Cache expired (age: ' + Math.round(age/1000) + 's), fetching fresh data');
+        console.log('🕐 Cache expired (age: ' + Math.round(age / 1000) + 's), fetching fresh data');
       }
     } else if (import.meta.env.DEV && skipCache) {
       console.log('⏭️ Skipping cache as requested');
@@ -256,7 +256,7 @@ export class AdminAuth {
       if (import.meta.env.DEV) {
         console.log('🔍 Verifying user with API (using HTTP-only cookies)...');
       }
-      
+
       // Make initial request
       let response = await fetch(API_URLS.me(), {
         method: 'GET',
@@ -271,7 +271,7 @@ export class AdminAuth {
         if (import.meta.env.DEV) {
           console.log('🔄 Access token expired, attempting refresh...');
         }
-        
+
         const refreshResponse = await fetch(API_URLS.refresh(), {
           method: 'POST',
           credentials: 'include', // Important: include refresh token cookie
@@ -279,12 +279,12 @@ export class AdminAuth {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (refreshResponse.ok) {
           if (import.meta.env.DEV) {
             console.log('✅ Token refresh successful, retrying user verification...');
           }
-          
+
           // Refresh successful, try user verification again
           response = await fetch(API_URLS.me(), {
             method: 'GET',
@@ -304,20 +304,20 @@ export class AdminAuth {
 
       if (response.ok) {
         const userData = await response.json();
-        
+
         if (import.meta.env.DEV) {
           console.log('👤 User verification result:', userData);
           console.log('🎭 Role data:', userData.role);
           console.log('🏆 Rank data:', userData.rank);
         }
-        
+
         this.verificationCache = { user: userData, timestamp: Date.now() };
         return userData;
       } else {
         if (import.meta.env.DEV) {
           console.log('❌ User verification failed with status:', response.status);
         }
-        
+
         this.verificationCache = { user: null, timestamp: Date.now() };
         return null;
       }
@@ -336,17 +336,17 @@ export class AdminAuth {
       }
       return null;
     }
-    
+
     // Since role is now guaranteed to be an object or null, we can simplify
     const roleName = user.role.name;
-    
+
     if (import.meta.env.DEV) {
       console.log('🎭 Role extracted:', roleName, 'from role object:', user.role);
     }
-    
+
     return roleName;
   }
-  
+
   static getUserRank(user: User | null): string | null {
     if (!user?.rank) {
       if (import.meta.env.DEV) {
@@ -354,16 +354,16 @@ export class AdminAuth {
       }
       return null;
     }
-    
+
     const rankName = user.rank.name;
-    
+
     if (import.meta.env.DEV) {
       console.log('🏆 Rank extracted:', rankName, 'from rank object:', user.rank);
     }
-    
+
     return rankName;
   }
-  
+
   static isUserAdmin(user: User | null): boolean {
     const role = this.getUserRole(user);
     if (!role) {
@@ -372,7 +372,7 @@ export class AdminAuth {
       }
       return false;
     }
-    
+
     const normalizedRole = role.toLowerCase();
     const isAdmin = normalizedRole === 'role.admin' || normalizedRole === 'role.administrator';
 
@@ -383,10 +383,10 @@ export class AdminAuth {
         isAdmin
       });
     }
-    
+
     return isAdmin;
   }
-  
+
   static hasPermission(user: User | null, permission: string): boolean {
     if (!user?.role) {
       if (import.meta.env.DEV) {
@@ -394,7 +394,7 @@ export class AdminAuth {
       }
       return false;
     }
-    
+
     // Check if user has admin role (admins have all permissions)
     if (this.isUserAdmin(user)) {
       if (import.meta.env.DEV) {
@@ -402,10 +402,10 @@ export class AdminAuth {
       }
       return true;
     }
-    
+
     // Check specific permission
     const hasPermission = user.role.permissions.includes(permission);
-    
+
     if (import.meta.env.DEV) {
       console.log('🔍 Permission check:', {
         permission,
@@ -414,7 +414,7 @@ export class AdminAuth {
         hasPermission
       });
     }
-    
+
     return hasPermission;
   }
 
@@ -431,7 +431,7 @@ export class AdminAuth {
     if (this.verificationCache && (Date.now() - this.verificationCache.timestamp) < this.CACHE_TTL) {
       return this.verificationCache.user !== null;
     }
-    
+
     // No reliable way to check without API call
     return false;
   }
@@ -455,11 +455,11 @@ export class AdminAuth {
       },
       body: JSON.stringify(userData),
     });
-    
+
     if (!response.ok) {
       try {
         const errorData = await response.json();
-        
+
         // Preserve the API error structure for proper error handling
         if (errorData.detail?.error_code) {
           // Throw error with the same structure as API response
@@ -471,7 +471,7 @@ export class AdminAuth {
         } else {
           // Fallback for old error format
           let errorMessage = 'Registration failed';
-          
+
           if (response.status === 429) {
             errorMessage = errorData.detail || 'Too many registration attempts. Please try again later.';
           } else if (response.status === 400) {
@@ -483,7 +483,7 @@ export class AdminAuth {
           } else {
             errorMessage = errorData.detail || errorData.message || `Server error (${response.status})`;
           }
-          
+
           throw new Error(errorMessage);
         }
       } catch (error) {
@@ -496,7 +496,7 @@ export class AdminAuth {
         }
       }
     }
-    
+
     const data: RegisterResponse = await response.json();
     return data;
   }
@@ -588,12 +588,12 @@ export class AdminAuth {
     }
 
     const data: VerifyEmailResponse = await response.json();
-    
+
     // If verification is successful and includes user data, cache it
     if (data.success && data.data?.user) {
       this.verificationCache = { user: data.data.user, timestamp: Date.now() };
     }
-    
+
     return data;
   }
 
@@ -602,7 +602,7 @@ export class AdminAuth {
       console.log('🔥 AdminAuth.resendVerification called with:', { email, language });
       console.log('🌐 API URL:', API_URLS.resendVerification());
     }
-    
+
     const response = await fetch(API_URLS.resendVerification(), {
       method: 'POST',
       headers: {
@@ -625,7 +625,7 @@ export class AdminAuth {
       if (import.meta.env.DEV) {
         console.error('Error verifying email:', errorData);
       }
-      
+
       // Special handling for EMAIL_ALREADY_VERIFIED - treat as info, not error
       if (translation_code === 'EMAIL_ALREADY_VERIFIED' && errorType === 'info') {
         console.log('📧 Email already verified - treating as info message');
@@ -634,10 +634,10 @@ export class AdminAuth {
         infoError.type = 'info';
         throw infoError;
       }
-      
+
       throw new Error(translation_code);
     }
-    
+
     const data: ResendVerificationResponse = await response.json();
     return data;
   }
@@ -664,10 +664,10 @@ export class AdminAuth {
     }
 
     const updatedUser = await response.json();
-    
+
     // Clear cache to force refresh
     this.verificationCache = null;
-    
+
     return updatedUser;
   }
 
@@ -717,7 +717,7 @@ export class AdminAuth {
       console.log('AdminAuth.requestPasswordReset called with:', { email, language });
       console.log('API_URLS.passwordResetRequest():', API_URLS.passwordResetRequest());
     }
-    
+
     const response = await fetch(API_URLS.passwordResetRequest(), {
       method: 'POST',
       headers: {
@@ -736,7 +736,7 @@ export class AdminAuth {
         if (import.meta.env.DEV) {
           console.log('Error data received:', errorData);
         }
-        
+
         // Preserve the API error structure for proper error handling - same as login/register
         if (errorData.detail?.error_code || errorData.detail?.translation_code) {
           if (import.meta.env.DEV) {
@@ -751,7 +751,7 @@ export class AdminAuth {
         } else {
           // Fallback for old error format
           let errorMessage = 'Failed to send password reset email';
-          
+
           // Handle specific HTTP status codes
           if (response.status === 429) {
             errorMessage = errorData.detail || 'Too many password reset attempts. Please wait before trying again.';
@@ -770,7 +770,7 @@ export class AdminAuth {
           } else {
             errorMessage = errorData.detail || errorData.message || `Server error (${response.status})`;
           }
-          
+
           throw new Error(errorMessage);
         }
       } catch (error) {
@@ -798,19 +798,19 @@ export class AdminAuth {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        email, 
-        reset_token: resetToken, 
-        new_password: newPassword 
+      body: JSON.stringify({
+        email,
+        reset_token: resetToken,
+        new_password: newPassword
       }),
     });
 
     if (!response.ok) {
       let errorMessage = 'Failed to reset password';
-      
+
       try {
         const errorData = await response.json();
-        
+
         // Handle specific HTTP status codes
         if (response.status === 429) {
           errorMessage = errorData.detail || 'Too many password reset attempts. Please try again later.';
@@ -826,7 +826,7 @@ export class AdminAuth {
       } catch {
         errorMessage = `Server error (${response.status}): ${response.statusText}`;
       }
-      
+
       throw new Error(errorMessage);
     }
 

@@ -6,6 +6,7 @@ import Button from '~/components/ui/Button.astro';
 import LanguageSwitcher from '~/components/LanguageSwitcher.astro';
 import CVDownload from '~/components/ui/CVDownload.astro';
 import { languages } from '~/i18n';
+import { useTranslations } from '~/i18n/utils';
 
 import { trimSlash } from '~/utils/permalinks';
 import type { CallToAction } from '~/types';
@@ -48,7 +49,11 @@ const {
   lang = 'en' as keyof typeof languages,
 } = Astro.props;
 
-const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
+const t = useTranslations(lang);
+const currentPath = new URL(Astro.url).pathname;
+// Portfolio is home page (root or language root)
+const isPortfolio = currentPath === '/' || /^\/[a-z]{2}\/?$/.test(currentPath);
+const normalizedPath = `/${trimSlash(currentPath)}`;
 ---
 
 <header
@@ -77,6 +82,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
     <div class:list={[{ 'mr-auto rtl:mr-0 rtl:ml-auto': position === 'right' }, 'flex justify-between']}>
       <SmartLogo />
       <div class="flex items-center md:hidden">
+        <ToggleTheme iconClass="w-6 h-6 md:w-5 md:h-5 md:inline-block" />
       </div>
     </div>
     <nav
@@ -92,7 +98,7 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
                 <a
                   class:list={[
                     'hover:text-link dark:hover:text-white px-4 py-3 flex items-center whitespace-nowrap',
-                    { 'aw-link-active': href === currentPath },
+                    { 'aw-link-active': href === normalizedPath },
                   ]}
                   href={href}
                 >
@@ -113,35 +119,94 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
         <div class="flex items-center">
           <slot name="extra" />
           
-          {/* Social Media Icons */}
-          <div class="flex items-center border-r border-gray-200 dark:border-gray-700 pr-2 mr-2">
-            <a
-              class="text-muted dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center mr-1"
-              aria-label="LinkedIn"
-              href="https://www.linkedin.com/in/krzysztof-głuchowski/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon name="tabler:brand-linkedin" class="w-5 h-5" />
-            </a>
-            
-            <a
-              class="text-muted dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center mr-2"
-              aria-label="GitHub"
-              href="https://github.com/KGR33N-dev"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icon name="tabler:brand-github" class="w-5 h-5" />
-            </a>
-          </div>
+          {/* Social Icons & CV - ONLY ON PORTFOLIO */}
+          {isPortfolio && (
+            <>
+              {/* Social Media Icons */}
+              <div class="flex items-center border-r border-gray-200 dark:border-gray-700 pr-2 mr-2">
+                <a
+                  class="text-muted dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center mr-1"
+                  aria-label="LinkedIn"
+                  href="https://www.linkedin.com/in/krzysztof-głuchowski/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="tabler:brand-linkedin" class="w-5 h-5" />
+                </a>
+                
+                <a
+                  class="text-muted dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 inline-flex items-center mr-2"
+                  aria-label="GitHub"
+                  href="https://github.com/KGR33N-dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="tabler:brand-github" class="w-5 h-5" />
+                </a>
+              </div>
+              
+              {/* CV Download */}
+              <div class="flex items-center border-r border-gray-200 dark:border-gray-700 pr-2 mr-2">
+                <CVDownload lang={lang} variant="header" />
+              </div>
+            </>
+          )}
           
-          <!-- CV Download -->
-          <div class="flex items-center border-r border-gray-200 dark:border-gray-700 pr-2 mr-2">
-            <CVDownload lang={lang} variant="header" />
-          </div>
-          
-          <!-- Grupa 2: User Controls -->
+          {/* Auth Actions - ONLY ON NON-PORTFOLIO (Blog, etc) */}
+          {!isPortfolio && (
+             <div class="flex items-center ml-4 mr-2 rtl:ml-0 rtl:mr-4 border-r border-gray-200 dark:border-gray-700 pr-2">
+                <!-- Guest State: Login Button -->
+                <a 
+                  id="nav-login-btn"
+                  href={`/${lang}/login`} 
+                  class="btn-secondary py-2 px-4 text-sm font-semibold shadow-none w-auto hidden"
+                >
+                  {t('nav.login')}
+                </a>
+                
+                <!-- User State: Dropdown -->
+                <div id="nav-user-dropdown" class="relative hidden">
+                   <button 
+                     id="nav-user-btn" 
+                     class="flex items-center gap-2 py-2 px-3 text-sm font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                   >
+                     <Icon name="tabler:user" class="w-5 h-5" />
+                     <span class="hidden lg:inline">{t('nav.account')}</span>
+                     <Icon name="tabler:chevron-down" class="w-4 h-4 opacity-50" />
+                   </button>
+                   
+                   <!-- Metadata for headerAuth script to know where to redirect -->
+                   
+                   <div id="nav-user-menu" class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-md shadow-xl py-1 ring-1 ring-black ring-opacity-5 hidden z-50 border border-gray-200 dark:border-gray-700">
+                        {/* Admin Panel Button - Hidden by default, toggled by JS */}
+                        <a id="nav-admin-btn" href={`/${lang}/admin/dashboard`} class="hidden block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                           <div class="flex items-center gap-2">
+                             <Icon name="tabler:dashboard" class="w-4 h-4" />
+                             {t('nav.admin')}
+                           </div>
+                        </a>
+                        
+                        <a href={`/${lang}/account`} class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                           <div class="flex items-center gap-2">
+                             <Icon name="tabler:user-circle" class="w-4 h-4" />
+                             {t('nav.account')}
+                           </div>
+                        </a>
+                        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                        <button id="nav-logout-btn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2">
+                           <Icon name="tabler:logout" class="w-4 h-4" />
+                           {t('nav.logout')}
+                        </button>
+                   </div>
+                </div>
+                
+                <script>
+                  import '~/scripts/headerAuth';
+                </script>
+             </div>
+          )}
+
+          <!-- Grupa 2: User Controls (Theme, Lang) -->
           <div class="flex items-center">
             {
               showLanguageSwitcher && (
@@ -151,6 +216,8 @@ const currentPath = `/${trimSlash(new URL(Astro.url).pathname)}`;
             {showToggleTheme && <ToggleTheme iconClass="w-6 h-6 md:w-5 md:h-5 md:inline-block" />}
           </div>
         </div>
+        
+        {/* Actions passed from props (e.g. RSS) */}
         {
           actions?.length ? (
             <span class="ml-4 rtl:ml-0 rtl:mr-4">

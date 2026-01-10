@@ -105,6 +105,10 @@ if [ "$DOCKER_MODE" = true ]; then
         docker exec -it "$BACKEND_CONTAINER" python -m app.create_admin
     fi
     
+    # Sync posts
+    echo -e "${BLUE}[*] Synchronizing blog posts from markdown...${NC}"
+    docker exec "$BACKEND_CONTAINER" python -m app.scripts.sync_posts
+    
 else
     # Local mode (run directly in Python environment)
     echo -e "${YELLOW}[!] Running in local mode${NC}"
@@ -152,6 +156,11 @@ else
     fi
     
     python -m app.create_admin
+    
+    # Sync posts
+    echo -e "${BLUE}[*] Synchronizing blog posts from markdown...${NC}"
+    export CONTENT_DIR="../frontend/src/content/blog"
+    python -m app.scripts.sync_posts
 fi
 
 echo ""
