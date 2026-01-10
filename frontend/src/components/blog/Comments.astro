@@ -2,7 +2,6 @@
 // src/components/blog/Comments.astro
 import { blogTranslations } from "~/i18n/pages/blog";
 import { API_URLS, API_CONFIG } from "~/config/api";
-import StaticNotificationSystem from "~/components/common/StaticNotificationSystem.astro";
 
 interface Props {
   post_slug: string; // Slug posta (np. "moj-pierwszy-post")
@@ -25,7 +24,6 @@ const apiUrls = {
 };
 ---
 
-<StaticNotificationSystem />
 <section
   id="comments-section-wrapper"
   class="comments-section mt-16 bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 border-t-4 border-blue-500"

@@ -4,7 +4,6 @@ export const prerender = true;
 import Layout from "~/layouts/PageLayout.astro";
 import Headline from "~/components/ui/Headline.astro";
 import WidgetWrapper from "~/components/ui/WidgetWrapper.astro";
-import StaticNotificationSystem from "~/components/common/StaticNotificationSystem.astro";
 import { useTranslations } from "~/i18n/utils";
 import { languages } from "~/i18n";
 
@@ -28,7 +27,6 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <StaticNotificationSystem />
   <WidgetWrapper
     id="register"
     containerClass="max-w-md mx-auto min-h-screen flex items-center"

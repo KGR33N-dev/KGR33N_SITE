@@ -3,7 +3,6 @@ export const prerender = true;
 import Layout from "~/layouts/PageLayout.astro";
 import Headline from "~/components/ui/Headline.astro";
 import WidgetWrapper from "~/components/ui/WidgetWrapper.astro";
-import StaticNotificationSystem from "~/components/common/StaticNotificationSystem.astro";
 import { useTranslations } from "~/i18n/utils";
 import { languages } from "~/i18n";
 
@@ -27,9 +26,6 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <!-- Static Notification System -->
-  <StaticNotificationSystem />
-
   <WidgetWrapper
     id="account-page"
     containerClass="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
