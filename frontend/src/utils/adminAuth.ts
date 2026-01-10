@@ -120,7 +120,10 @@ export interface PasswordResetConfirmResponse {
 export class AdminAuth {
   // User verification cache to prevent duplicate API calls
   private static verificationCache: { user: User | null; timestamp: number } | null = null;
-  private static readonly CACHE_TTL = 5000; // 5 seconds cache
+  private static readonly CACHE_TTL = 30000; // 30 seconds cache (increased from 5s)
+
+  // Pending verification request - prevents multiple simultaneous API calls
+  private static pendingVerification: Promise<User | null> | null = null;
 
   // Since tokens are now HTTP-only cookies, we can't access them from JavaScript
   // Authentication status is determined by successful API calls
@@ -237,7 +240,7 @@ export class AdminAuth {
     return data.user;
   }
 
-  // Verify user with server (API-based authentication) with caching
+  // Verify user with server (API-based authentication) with caching and request deduplication
   static async verifyUser(skipCache = false): Promise<User | null> {
     // Check cache first (unless skipping)
     if (!skipCache && this.verificationCache) {
@@ -254,12 +257,33 @@ export class AdminAuth {
       console.log('⏭️ Skipping cache as requested');
     }
 
+    // If there's already a pending request, wait for it instead of making a new one
+    if (this.pendingVerification) {
+      if (import.meta.env.DEV) {
+        console.log('⏳ Waiting for existing verification request...');
+      }
+      return this.pendingVerification;
+    }
+
+    // Create the actual verification request
+    this.pendingVerification = this._doVerifyUser();
+
+    try {
+      const result = await this.pendingVerification;
+      return result;
+    } finally {
+      // Clear pending request when done
+      this.pendingVerification = null;
+    }
+  }
+
+  // Internal method that actually performs the API call
+  private static async _doVerifyUser(): Promise<User | null> {
     try {
       if (import.meta.env.DEV) {
         console.log('🔍 Verifying user with API (using HTTP-only cookies)...');
       }
 
-      // Make initial request
       // Make initial request
       let response = await fetch(API_URLS.me(), {
         method: 'GET',

@@ -187,9 +187,9 @@ class EmailService:
         
         print(f"📝 Got translations for language: {language}")
         
-        # Create verification link
+        # Create verification link with code for auto-verification
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:4321")
-        verification_link = f"{frontend_url}/{language}/verify-email?email={email}"
+        verification_link = f"{frontend_url}/{language}/verify-email?email={email}&code={verification_code}"
         
         html_content = f"""
         <!DOCTYPE html>
