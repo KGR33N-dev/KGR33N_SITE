@@ -43,8 +43,8 @@ spec:
                 - name: POSTGRES_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: backend-env
-                      key: POSTGRES_PASSWORD
+                      name: app-secrets
+                      key: postgres-password
                       optional: true
                 # Need to create this secret with AWS credentials from Terraform output
                 - name: AWS_ACCESS_KEY_ID

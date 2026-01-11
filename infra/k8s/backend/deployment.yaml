@@ -48,6 +48,18 @@ spec:
               value: "false"
             - name: FRONTEND_URL
               value: "https://kgr33n.com"
+            - name: PRODUCTION_FRONTEND
+              value: "https://kgr33n.com"
+            - name: BACKEND_URL
+              value: "https://kgr33n.com/api"
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: resend-api-key
+                  optional: true
+            - name: FROM_EMAIL
+              value: "noreply@kgr33n.com"
           # Resource limits optimized for t3.micro (1GB RAM total)
           # With 1 worker, FastAPI uses ~100-150MB
           resources:
@@ -73,4 +85,6 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+      imagePullSecrets:
+        - name: ghcr-secret
       restartPolicy: Always

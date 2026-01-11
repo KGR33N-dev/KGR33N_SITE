@@ -25,6 +25,11 @@ resources:
   # Security - Network Policies (optional, requires CNI support)
   # Uncomment when using Calico or Cilium CNI instead of Flannel
   # - network-policies.yaml
+  
+  # Backups - Database backup to S3 (requires backup-secrets)
+  # Prerequisites: Create backup-secrets with AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME
+  # Uncomment after setting up AWS S3 bucket and IAM credentials from Terraform
+  # - database/backup-cronjob.yaml
 
 # Common labels applied to all resources
 commonLabels:
