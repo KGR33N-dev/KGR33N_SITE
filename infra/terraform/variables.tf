@@ -58,6 +58,12 @@ variable "ssh_allowed_cidr" {
   # Example: ["123.45.67.89/32"] - your IP only
 }
 
+variable "k8s_api_allowed_cidr" {
+  description = "CIDR blocks allowed to access K3s API (6443). Needs to be 0.0.0.0/0 for GitHub Actions unless using self-hosted runners."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 # -----------------------------------------------------------------------------
 # CLOUDFLARE
 # -----------------------------------------------------------------------------
