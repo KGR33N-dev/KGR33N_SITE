@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Build arguments for environment configuration
 # These are injected at build time via docker-compose or CI/CD
-ARG PUBLIC_API_URL=https://api.kgr33n.com
+ARG PUBLIC_API_URL=https://kgr33n.com
 ARG PUBLIC_FRONTEND_URL=https://kgr33n.com
 ARG PUBLIC_ENVIRONMENT=production
 

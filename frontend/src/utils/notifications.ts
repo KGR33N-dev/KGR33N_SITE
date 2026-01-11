@@ -7,7 +7,9 @@ import type { NotificationType } from '../types/notifications';
  */
 export function showNotification(message: string, type: NotificationType = 'info'): void {
   if (!window.StaticNotifications) {
-    console.warn('StaticNotifications not available, falling back to console:', type, message);
+    if (import.meta.env.DEV) {
+      console.warn('StaticNotifications not available, falling back to console:', type, message);
+    }
     console[type === 'error' ? 'error' : 'log'](`[${type.toUpperCase()}] ${message}`);
     return;
   }
@@ -23,9 +25,11 @@ export function showNotification(message: string, type: NotificationType = 'info
  */
 export function showNotificationKey(translationKey: string, type: NotificationType = 'info', prefix?: string): void {
   const finalKey = prefix ? `${prefix}${translationKey}` : translationKey;
-  
+
   if (!window.StaticNotifications) {
-    console.warn('StaticNotifications not available, falling back to console:', type, finalKey);
+    if (import.meta.env.DEV) {
+      console.warn('StaticNotifications not available, falling back to console:', type, finalKey);
+    }
     console[type === 'error' ? 'error' : 'log'](`[${type.toUpperCase()}] ${finalKey}`);
     return;
   }
@@ -74,7 +78,7 @@ export const notifications = {
   success: (message: string) => showNotification(message, 'success'),
   warning: (message: string) => showNotification(message, 'warning'),
   info: (message: string) => showNotification(message, 'info'),
-  
+
   // i18n translation key methods
   showKey: showNotificationKey,
   errorKey: (key: string, prefix?: string) => showNotificationKey(key, 'error', prefix),

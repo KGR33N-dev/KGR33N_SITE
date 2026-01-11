@@ -353,7 +353,9 @@ export class AdminAuth {
         return null;
       }
     } catch (error) {
-      console.error('Error verifying user:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error verifying user:', error);
+      }
       this.verificationCache = { user: null, timestamp: Date.now() };
       return null;
     }
@@ -653,7 +655,9 @@ export class AdminAuth {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log('🔍 Error data received:', errorData);
+      if (import.meta.env.DEV) {
+        console.log('🔍 Error data received:', errorData);
+      }
 
       const translation_code = errorData.detail.translation_code;
       const errorType = errorData.detail.type;
@@ -664,7 +668,9 @@ export class AdminAuth {
 
       // Special handling for EMAIL_ALREADY_VERIFIED - treat as info, not error
       if (translation_code === 'EMAIL_ALREADY_VERIFIED' && errorType === 'info') {
-        console.log('📧 Email already verified - treating as info message');
+        if (import.meta.env.DEV) {
+          console.log('📧 Email already verified - treating as info message');
+        }
         // Create a custom error object with type info
         const infoError = new Error(translation_code) as Error & { type: string };
         infoError.type = 'info';

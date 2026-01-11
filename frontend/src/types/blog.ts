@@ -43,10 +43,10 @@ export interface Post {
   permalink: string;
   readingTime?: string;
   language?: string;
-  
+
   // Dostęp do wszystkich tłumaczeń
   translations?: Translation[];
-  
+
   // Pomocnicze właściwości dla aktualnego języka
   currentTitle?: string;
   currentContent?: string;
@@ -125,13 +125,17 @@ export interface CreatePostData {
 export function convertApiPostToPost(apiPost: ApiPost, requestedLang: string = 'en'): Post {
   // Znajdź tłumaczenie dla danego języka lub fallback na pierwsze dostępne
   const translation = apiPost.translations.find(t => t.language_code === requestedLang) || apiPost.translations[0];
-  
+
   if (!translation) {
-    console.warn(`No translation found for post ${apiPost.id}, available languages:`, apiPost.translations?.map(t => t.language_code));
+    if (import.meta.env.DEV) {
+      console.warn(`No translation found for post ${apiPost.id}, available languages:`, apiPost.translations?.map(t => t.language_code));
+    }
     throw new Error(`No translation found for post ${apiPost.id}`);
   }
 
-  console.log(`Converting post ${apiPost.id} with ${translation.language_code} translation (requested: ${requestedLang})`);
+  if (import.meta.env.DEV) {
+    console.log(`Converting post ${apiPost.id} with ${translation.language_code} translation (requested: ${requestedLang})`);
+  }
 
   return {
     id: apiPost.id,
@@ -154,7 +158,7 @@ export function convertApiPostToPost(apiPost: ApiPost, requestedLang: string = '
     language: requestedLang, // Use requested language for UI consistency
     translations: apiPost.translations,
     readingTime: estimateReadingTime(translation.content),
-    
+
     // Dodatkowe pomocnicze właściwości dla łatwego dostępu
     currentTitle: translation.title,
     currentContent: translation.content,
