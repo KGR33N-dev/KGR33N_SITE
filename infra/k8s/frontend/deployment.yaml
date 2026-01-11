@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/kgr33n/kgr33n-frontend:latest
+          image: ghcr.io/kgr33n-dev/kgr33n-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

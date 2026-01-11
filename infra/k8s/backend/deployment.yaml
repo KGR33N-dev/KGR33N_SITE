@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/kgr33n/kgr33n-backend:latest
+          image: ghcr.io/kgr33n-dev/kgr33n-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
