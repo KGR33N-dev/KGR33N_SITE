@@ -59,7 +59,7 @@ spec:
                   key: resend-api-key
                   optional: true
             - name: FROM_EMAIL
-              value: "noreply@kgr33n.com"
+              value: "noreply@auth.kgr33n.com"
           # Resource limits optimized for t3.micro (1GB RAM total)
           # With 1 worker, FastAPI uses ~100-150MB
           resources:

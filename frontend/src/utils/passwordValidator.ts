@@ -10,6 +10,7 @@ interface PasswordRequirement {
   test: (password: string) => boolean;
   message: string;
   weight: number; // Contribution to overall score
+  required: boolean; // If true, this must pass for password to be valid
 }
 
 export class PasswordValidator {
@@ -19,89 +20,102 @@ export class PasswordValidator {
     'abc123', 'password1', 'admin', 'letmein', 'welcome',
     'monkey', '1234567890', 'dragon', 'pass', 'master'
   ];
-  
+
   // Password requirements with weights
   private static readonly REQUIREMENTS: PasswordRequirement[] = [
     {
       test: (pwd: string) => pwd.length >= 8,
       message: 'At least 8 characters',
-      weight: 15
+      weight: 15,
+      required: true
     },
     {
       test: (pwd: string) => pwd.length >= 12,
       message: 'At least 12 characters (recommended)',
-      weight: 10
+      weight: 10,
+      required: false  // Bonus only, not required
     },
     {
       test: (pwd: string) => /[A-Z]/.test(pwd),
       message: 'One uppercase letter',
-      weight: 15
+      weight: 15,
+      required: true
     },
     {
       test: (pwd: string) => /[a-z]/.test(pwd),
       message: 'One lowercase letter',
-      weight: 15
+      weight: 15,
+      required: true
     },
     {
       test: (pwd: string) => /\d/.test(pwd),
       message: 'One number',
-      weight: 15
+      weight: 15,
+      required: true
     },
     {
       test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>_]/.test(pwd),
       message: 'One special character (!@#$%^&*_...)',
-      weight: 20
+      weight: 20,
+      required: true
     },
     {
       test: (pwd: string) => !this.isCommonPassword(pwd),
       message: 'Not a common password',
-      weight: 10
+      weight: 10,
+      required: true
     }
   ];
-  
+
   static validate(password: string): PasswordValidationResult {
     const errors: string[] = [];
     let score = 0;
-    
+    let hasRequiredError = false;
+
     // Check each requirement
     for (const requirement of this.REQUIREMENTS) {
       if (requirement.test(password)) {
         score += requirement.weight;
       } else {
-        errors.push(requirement.message);
+        // Only add to errors if it's a required check
+        if (requirement.required) {
+          errors.push(requirement.message);
+          hasRequiredError = true;
+        }
+        // Non-required checks just don't add to score
       }
     }
-    
+
     // Additional scoring factors
     if (password.length > 15) score += 5;
     if (this.hasNoRepeatingChars(password)) score += 5;
     if (this.hasGoodEntropy(password)) score += 5;
-    
+
     // Ensure score doesn't exceed 100
     score = Math.min(score, 100);
-    
+
     // Determine strength
     let strength: PasswordValidationResult['strength'];
     if (score >= 85) strength = 'very-strong';
     else if (score >= 70) strength = 'strong';
     else if (score >= 50) strength = 'medium';
     else strength = 'weak';
-    
+
     return {
-      isValid: errors.length === 0,
+      isValid: !hasRequiredError, // Only required errors block validation
       errors,
       strength,
       score
     };
   }
-  
+
   private static isCommonPassword(password: string): boolean {
     const lowerPassword = password.toLowerCase();
-    return this.COMMON_PASSWORDS.some(common => 
+    return this.COMMON_PASSWORDS.some(common =>
       lowerPassword.includes(common) || common.includes(lowerPassword)
     );
   }
-  
+
   private static hasNoRepeatingChars(password: string): boolean {
     // Check for 3+ consecutive identical characters
     for (let i = 0; i < password.length - 2; i++) {
@@ -111,18 +125,18 @@ export class PasswordValidator {
     }
     return true;
   }
-  
+
   private static hasGoodEntropy(password: string): boolean {
     // Simple entropy check - at least 4 different character types
     const hasLower = /[a-z]/.test(password);
     const hasUpper = /[A-Z]/.test(password);
     const hasDigit = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     const characterTypes = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
     return characterTypes >= 3;
   }
-  
+
   static getStrengthColor(strength: PasswordValidationResult['strength']): string {
     switch (strength) {
       case 'weak': return 'text-red-500';
@@ -132,7 +146,7 @@ export class PasswordValidator {
       default: return 'text-gray-500';
     }
   }
-  
+
   static getStrengthBgColor(strength: PasswordValidationResult['strength']): string {
     switch (strength) {
       case 'weak': return 'bg-red-500';
@@ -142,7 +156,7 @@ export class PasswordValidator {
       default: return 'bg-gray-500';
     }
   }
-  
+
   static generateSuggestion(): string {
     const suggestions = [
       'Try combining words with numbers and symbols',
@@ -151,7 +165,7 @@ export class PasswordValidator {
       'Avoid common words and personal information',
       'Consider using a password manager'
     ];
-    
+
     return suggestions[Math.floor(Math.random() * suggestions.length)];
   }
 }

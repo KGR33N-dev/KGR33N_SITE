@@ -29,6 +29,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Copy blog content to backend
+        run: |
+          echo "📄 Copying blog content files to backend..."
+          cp -r frontend/src/content/blog backend/content_blog
+          ls -la backend/content_blog/
+          echo "✅ Blog content copied!"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -148,3 +155,18 @@ jobs:
           echo ""
           echo "=== Ingress ==="
           kubectl get ingress -n kgr33n
+
+      - name: Sync blog posts to database
+        run: |
+          echo "🔄 Syncing blog posts to database..."
+          # Wait for backend pod to be ready
+          kubectl wait --for=condition=ready pod -l app=backend -n kgr33n --timeout=120s
+          # Get the backend pod name
+          BACKEND_POD=$(kubectl get pods -n kgr33n -l app=backend -o jsonpath='{.items[0].metadata.name}')
+          echo "📦 Using pod: $BACKEND_POD"
+          # Run database migrations (Alembic)
+          echo "🗄️ Running database migrations..."
+          kubectl exec -n kgr33n $BACKEND_POD -- alembic upgrade head || echo "⚠️ Migrations may already be applied"
+          # Run sync_posts script inside the backend container
+          kubectl exec -n kgr33n $BACKEND_POD -- python -m app.scripts.sync_posts
+          echo "✅ Blog posts sync complete!"

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import User, UserRoleEnum, Comment, CommentLike, APIKey
+from ..models import User, UserRoleEnum, UserRank, Comment, CommentLike, APIKey
 from ..schemas import APIResponse
 from ..security import (
     get_current_user, verify_password, get_password_hash, 
@@ -284,6 +284,7 @@ async def get_profile_info(
         "last_login": current_user.last_login,
         "total_comments": current_user.total_comments,
         "total_likes_received": current_user.total_likes_received,
+        "reputation_score": current_user.reputation_score or 0,
         "role": {
             "id": current_user.role.id if current_user.role else None,
             "name": current_user.role.name if current_user.role else None,
@@ -297,10 +298,34 @@ async def get_profile_info(
             "color": current_user.rank.color if current_user.rank else None,
             "icon": current_user.rank.icon if current_user.rank else None,
             "level": current_user.rank.level if current_user.rank else None,
+            "requirements": current_user.rank.requirements if current_user.rank else None,
         } if current_user.rank else None,
         "account_status": {
             "is_locked": current_user.account_locked_until is not None,
             "locked_until": current_user.account_locked_until,
             "failed_attempts": current_user.failed_login_attempts
         }
+    }
+
+@router.get("/ranks", response_model=dict)
+async def get_all_ranks(
+    db: Session = Depends(get_db)
+):
+    """Get all available ranks and their requirements"""
+    ranks = db.query(UserRank).filter(UserRank.is_active == True).order_by(UserRank.level.asc()).all()
+    
+    return {
+        "ranks": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "display_name": r.display_name,
+                "description": r.description,
+                "icon": r.icon,
+                "color": r.color,
+                "level": r.level,
+                "requirements": r.requirements
+            }
+            for r in ranks
+        ]
     }

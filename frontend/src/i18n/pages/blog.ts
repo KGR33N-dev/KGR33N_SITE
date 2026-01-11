@@ -32,7 +32,7 @@ export const blogTranslations = {
     'blog.postsByCategory': 'Posts in category',
     'blog.noPostsInTag': 'No posts found with this tag',
     'blog.noPostsInCategory': 'No posts found in this category',
-    
+
     // ===== COMMENTS SECTION =====
     'comments.title': 'Comments',
     'comments.addComment': 'Add a comment',
@@ -59,7 +59,7 @@ export const blogTranslations = {
     'comments.editTime': 'Edit within 15 minutes of posting',
     'comments.likes': 'likes',
     'comments.dislikes': 'dislikes',
-    
+
     // ===== BLOG COMMENTS SYSTEM =====
     'blog.comments': 'Comments',
     'blog.commentsCount': 'comments',
@@ -98,7 +98,7 @@ export const blogTranslations = {
     'blog.you': 'You',
     'blog.editWindow': 'Can edit for 15 minutes',
     'blog.loadReplies': 'Load Replies',
-    
+
     // ===== TIME AGO =====
     'blog.timeAgo.now': 'Just now',
     'blog.timeAgo.minute': 'minute ago',
@@ -146,7 +146,7 @@ export const blogTranslations = {
     'comments.selfLikeError': 'You cannot like your own comment',
     'comments.likeError': 'Error while rating comment',
     'comments.ownCommentTooltip': 'You cannot like/dislike your own comment',
-    
+
     // ===== AUTHENTICATION SECTION =====
     'auth.title': 'Login',
     'auth.subtitle': 'Sign in to your account',
@@ -163,7 +163,7 @@ export const blogTranslations = {
     'auth.register': 'Register',
     'auth.forgotPassword': 'Forgot password?',
     'auth.verifyAccount': 'Verify Account',
-    
+
     // Registration
     'auth.registerTitle': 'Create Account',
     'auth.registerSubtitle': 'Sign up for a new account',
@@ -194,14 +194,14 @@ export const blogTranslations = {
     'auth.signInHere': 'Sign in here',
     'auth.dontHaveAccount': "Don't have an account?",
     'auth.signUpHere': 'Sign up here',
-    
+
     // Registration success/error messages
     'auth.accountCreated': 'Account created! Please check your email for verification code.',
     'auth.registrationFailed': 'Registration failed. Please try again.',
     'auth.fixErrors': 'Please fix the errors above',
     'auth.creatingAccount': 'Creating account...',
     'auth.tooManyRegistrationAttempts': 'Too many registration attempts. Please try again later.',
-    
+
     // Email Verification
     'auth.verifyEmailTitle': 'Verify Your Email',
     'auth.verifyEmailSubtitle': 'Enter the 6-digit code sent to your email',
@@ -213,7 +213,7 @@ export const blogTranslations = {
     'auth.resendIn': 'Resend in',
     'auth.backToLogin': 'Back to Login',
     'auth.checkYourEmail': 'Check your email for verification code',
-    
+
     // Password Reset
     'auth.forgotPasswordTitle': 'Forgot Password',
     'auth.forgotPasswordSubtitle': 'Enter your email to receive a reset link',
@@ -226,7 +226,7 @@ export const blogTranslations = {
     'auth.newPassword': 'New Password',
     'auth.newPasswordPlaceholder': 'Enter your new password',
     'auth.linkExpiresIn': 'Link expires in',
-    
+
     // Reset password errors
     'auth.emailNotFound': 'Email address not found. Please check your email and try again.',
     'auth.emailNotVerified': 'Your email address has not been verified yet. Please verify your email before resetting your password.',
@@ -236,7 +236,7 @@ export const blogTranslations = {
     'auth.sendingResetLink': 'Sending reset link...',
     'auth.enterEmailAddress': 'Please enter your email address',
     'auth.resetLinkFailed': 'Failed to send reset link. Please try again.',
-    
+
     // Reset password form
     'auth.passwordResetSuccess': 'Password reset successfully!',
     'auth.passwordResetFailed': 'Failed to reset password. Please try again.',
@@ -247,7 +247,7 @@ export const blogTranslations = {
     'auth.goToLogin': 'Go to Login',
     'auth.linkExpired': 'Link expired',
     'auth.requestNewLink': 'Request New Link',
-    
+
     // ===== ADMIN SECTION =====
     'admin.title': 'Blog Administration',
     'admin.dashboard': 'Admin Dashboard',
@@ -255,7 +255,7 @@ export const blogTranslations = {
     'admin.logout': 'Logout',
     'admin.settings': 'Account Settings',
     'admin.accessDenied': 'Access denied - Admin only',
-    
+
     // ===== ACCOUNT MANAGEMENT =====
     'account.title': 'Account Settings',
     'account.subtitle': 'Manage your account information',
@@ -290,7 +290,7 @@ export const blogTranslations = {
     'account.role': 'Role',
     'account.rank': 'Rank',
     'account.memberSince': 'Member Since',
-    
+
     // Account management error and success messages
     'account.loadingAccountInfo': 'Loading account information...',
     'account.failedToLoadAccount': 'Failed to load account information',
@@ -349,7 +349,7 @@ export const blogTranslations = {
     'admin.allPosts': 'All Posts',
     'admin.allStatuses': 'All Statuses',
     'admin.allLanguages': 'All Languages',
-    
+
     // ===== POST MANAGEMENT =====
     'admin.createPost': 'Create New Post',
     'admin.editPost': 'Edit Post',
@@ -369,7 +369,7 @@ export const blogTranslations = {
     'admin.postStatus': 'Status',
     'admin.draft': 'Draft',
     'admin.published': 'Published',
-    
+
     // ===== POST FORM MESSAGES =====
     'admin.editPostSubtitle': 'Modify and update your blog post',
     'admin.backToDashboard': 'Back to Dashboard',
@@ -398,7 +398,7 @@ export const blogTranslations = {
     'admin.changesHaveBeenSaved': 'Your changes have been saved.',
     'admin.languageEnglish': 'English',
     'admin.languagePolish': 'Polski',
-    
+
     // ===== EDIT POST FORM =====
     'admin.saveChanges': 'Save Changes',
     'admin.savingChanges': 'Saving...',
@@ -424,7 +424,7 @@ export const blogTranslations = {
     'admin.slugCannotBeChanged': 'Slug cannot be changed after creation',
     'admin.basicInfo': 'Basic Information',
     'admin.publishedAt': 'Published',
-    
+
     // ===== CREATE POST FORM =====
     'admin.generalSettings': 'General Settings',
     'admin.postSlugRequired': 'Post Slug *',
@@ -454,7 +454,7 @@ export const blogTranslations = {
     'admin.seoTitlePlaceholder': 'SEO title (leave empty to use post title)',
     'admin.seoDescriptionPlaceholder': 'SEO description (leave empty to use excerpt)',
     'admin.testBackendConnection': 'Test Backend Connection',
-    
+
     // ===== DASHBOARD MESSAGES =====
     'admin.adminAccessRequired': 'You need to be logged in as an administrator to access this page.',
     'admin.goToLogin': 'Go to Login',
@@ -479,7 +479,7 @@ export const blogTranslations = {
     'admin.actionCannotBeUndone': 'This action cannot be undone.',
     'admin.postDeletedSuccessfully': 'Post deleted successfully',
     'admin.errorDeletingPost': 'Error deleting post. Please try again.',
-    
+
     // ===== LANGUAGE MANAGEMENT =====
     'admin.languageManagement': 'Language Management',
     'admin.languageSettings': 'Language Settings',
@@ -531,6 +531,31 @@ export const blogTranslations = {
     'admin.totalLanguages': 'Total Languages',
     'admin.activeLanguages': 'Active Languages',
     'admin.languagesInUse': 'Languages in Use',
+
+    // ===== DASHBOARD STATISTICS =====
+    'admin.totalUsers': 'Total Users',
+    'admin.totalComments': 'Total Comments',
+    'admin.totalLikes': 'Total Likes',
+    'admin.totalReactions': 'Reactions',
+    'admin.recentUsers': 'Recent Registrations',
+    'admin.loading': 'Loading...',
+    'admin.new24h': 'new in 24h',
+    'admin.last24h': 'in last 24h',
+    'admin.last7d': 'in last 7 days',
+    'admin.verified': 'Verified',
+    'admin.unverified': 'Unverified',
+    'admin.topCommenters': 'Top Commenters',
+    'admin.rankProgress': 'Rank Progress',
+    'admin.xpToNext': 'XP to next level',
+    'admin.reactionsPerPost': 'reactions',
+
+    // Account password requirements
+    'account.passwordRequirements': 'Password must contain:',
+    'account.passwordMinLength': 'At least 8 characters',
+    'account.passwordUppercase': 'One uppercase letter',
+    'account.passwordLowercase': 'One lowercase letter',
+    'account.passwordNumber': 'One number',
+    'account.passwordSpecial': 'One special character',
   },
   pl: {
     // ===== SEKCJA BLOG =====
@@ -565,7 +590,7 @@ export const blogTranslations = {
     'blog.postsByCategory': 'Posty w kategorii',
     'blog.noPostsInTag': 'Nie znaleziono postów z tym tagiem',
     'blog.noPostsInCategory': 'Nie znaleziono postów w tej kategorii',
-    
+
     // ===== SEKCJA KOMENTARZY =====
     'comments.title': 'Komentarze',
     'comments.addComment': 'Dodaj komentarz',
@@ -625,7 +650,7 @@ export const blogTranslations = {
     'comments.selfLikeError': 'Nie możesz polubić własnego komentarza',
     'comments.likeError': 'Błąd podczas oceniania komentarza',
     'comments.ownCommentTooltip': 'Nie możesz polubić/odrzucić własnego komentarza',
-    
+
     // ===== SYSTEM KOMENTARZY BLOGA =====
     'blog.comments': 'Komentarze',
     'blog.commentsCount': 'komentarzy',
@@ -664,7 +689,7 @@ export const blogTranslations = {
     'blog.you': 'Ty',
     'blog.editWindow': 'Można edytować przez 15 minut',
     'blog.loadReplies': 'Załaduj odpowiedzi',
-    
+
     // ===== CZAS =====
     'blog.timeAgo.now': 'Teraz',
     'blog.timeAgo.minute': 'minutę temu',
@@ -679,7 +704,7 @@ export const blogTranslations = {
     'blog.timeAgo.months': 'miesięcy temu',
     'blog.timeAgo.year': 'rok temu',
     'blog.timeAgo.years': 'lat temu',
-    
+
     // ===== SEKCJA UWIERZYTELNIANIA =====
     'auth.title': 'Logowanie',
     'auth.subtitle': 'Zaloguj się na swoje konto',
@@ -696,7 +721,7 @@ export const blogTranslations = {
     'auth.register': 'Rejestracja',
     'auth.forgotPassword': 'Zapomniałeś hasła?',
     'auth.verifyAccount': 'Zweryfikuj Konto',
-    
+
     // Rejestracja
     'auth.registerTitle': 'Utwórz Konto',
     'auth.registerSubtitle': 'Zarejestruj się aby założyć nowe konto',
@@ -727,14 +752,14 @@ export const blogTranslations = {
     'auth.signInHere': 'Zaloguj się tutaj',
     'auth.dontHaveAccount': 'Nie masz konta?',
     'auth.signUpHere': 'Zarejestruj się tutaj',
-    
+
     // Wiadomości sukcesu/błędu rejestracji
     'auth.accountCreated': 'Konto zostało utworzone! Sprawdź swój email w poszukiwaniu kodu weryfikacyjnego.',
     'auth.registrationFailed': 'Rejestracja nie powiodła się. Spróbuj ponownie.',
     'auth.fixErrors': 'Proszę poprawić błędy powyżej',
     'auth.creatingAccount': 'Tworzenie konta...',
     'auth.tooManyRegistrationAttempts': 'Zbyt wiele prób rejestracji. Spróbuj ponownie później.',
-    
+
     // Weryfikacja Email
     'auth.verifyEmailTitle': 'Zweryfikuj Swój Email',
     'auth.verifyEmailSubtitle': 'Wprowadź 6-cyfrowy kod wysłany na Twój email',
@@ -746,7 +771,7 @@ export const blogTranslations = {
     'auth.resendIn': 'Wyślij ponownie za',
     'auth.backToLogin': 'Powrót do Logowania',
     'auth.checkYourEmail': 'Sprawdź swój email w poszukiwaniu kodu weryfikacyjnego',
-    
+
     // Reset Hasła
     'auth.forgotPasswordTitle': 'Zapomniałeś Hasła',
     'auth.forgotPasswordSubtitle': 'Wprowadź swój email aby otrzymać link resetujący',
@@ -759,7 +784,7 @@ export const blogTranslations = {
     'auth.newPassword': 'Nowe Hasło',
     'auth.newPasswordPlaceholder': 'Wprowadź nowe hasło',
     'auth.linkExpiresIn': 'Link wygasa za',
-    
+
     // Błędy resetowania hasła
     'auth.emailNotFound': 'Adres email nie został znaleziony. Sprawdź swój email i spróbuj ponownie.',
     'auth.emailNotVerified': 'Twój adres email nie został jeszcze zweryfikowany. Zweryfikuj swój email przed resetowaniem hasła.',
@@ -769,7 +794,7 @@ export const blogTranslations = {
     'auth.sendingResetLink': 'Wysyłanie linku resetującego...',
     'auth.enterEmailAddress': 'Proszę wprowadź swój adres email',
     'auth.resetLinkFailed': 'Nie udało się wysłać linku resetującego. Spróbuj ponownie.',
-    
+
     // Formularz resetowania hasła
     'auth.passwordResetSuccess': 'Hasło zostało pomyślnie zresetowane!',
     'auth.passwordResetFailed': 'Nie udało się zresetować hasła. Spróbuj ponownie.',
@@ -780,7 +805,7 @@ export const blogTranslations = {
     'auth.goToLogin': 'Przejdź do logowania',
     'auth.linkExpired': 'Link wygasł',
     'auth.requestNewLink': 'Poproś o nowy link',
-    
+
     // ===== SEKCJA ADMIN =====
     'admin.title': 'Administracja Bloga',
     'admin.dashboard': 'Panel Administratora',
@@ -788,7 +813,7 @@ export const blogTranslations = {
     'admin.logout': 'Wyloguj',
     'admin.settings': 'Ustawienia Konta',
     'admin.accessDenied': 'Dostęp zabroniony - tylko dla administratorów',
-    
+
     // ===== ZARZĄDZANIE KONTEM =====
     'account.title': 'Ustawienia Konta',
     'account.subtitle': 'Zarządzaj informacjami o swoim koncie',
@@ -823,7 +848,7 @@ export const blogTranslations = {
     'account.role': 'Rola',
     'account.rank': 'Ranga',
     'account.memberSince': 'Członek od',
-    
+
     // Account management error and success messages
     'account.loadingAccountInfo': 'Ładowanie informacji o koncie...',
     'account.failedToLoadAccount': 'Nie udało się załadować informacji o koncie',
@@ -879,7 +904,7 @@ export const blogTranslations = {
     'admin.errorLoadingData': 'Błąd podczas ładowania danych',
     'admin.errorLoadingDrafts': 'Błąd podczas ładowania szkiców',
     'admin.checkApiServer': 'Upewnij się, że serwer API działa',
-    
+
     // ===== ZARZĄDZANIE POSTAMI =====
     'admin.createPost': 'Utwórz Nowy Post',
     'admin.editPost': 'Edytuj Post',
@@ -902,7 +927,7 @@ export const blogTranslations = {
     'admin.allPosts': 'Wszystkie Posty',
     'admin.allStatuses': 'Wszystkie Statusy',
     'admin.allLanguages': 'Wszystkie Języki',
-    
+
     // ===== KOMUNIKATY FORMULARZA POSTA =====
     'admin.editPostSubtitle': 'Modyfikuj i aktualizuj swój post na blogu',
     'admin.backToDashboard': 'Powrót do Panelu',
@@ -931,7 +956,7 @@ export const blogTranslations = {
     'admin.changesHaveBeenSaved': 'Twoje zmiany zostały zapisane.',
     'admin.languageEnglish': 'Angielski',
     'admin.languagePolish': 'Polski',
-    
+
     // ===== FORMULARZ EDYCJI POSTA =====
     'admin.saveChanges': 'Zapisz Zmiany',
     'admin.savingChanges': 'Zapisywanie...',
@@ -957,7 +982,7 @@ export const blogTranslations = {
     'admin.slugCannotBeChanged': 'Slug nie może być zmieniony po utworzeniu',
     'admin.basicInfo': 'Podstawowe Informacje',
     'admin.publishedAt': 'Opublikowano',
-    
+
     // ===== FORMULARZ TWORZENIA POSTA =====
     'admin.generalSettings': 'Ustawienia Ogólne',
     'admin.postSlugRequired': 'Slug Posta *',
@@ -987,7 +1012,7 @@ export const blogTranslations = {
     'admin.seoTitlePlaceholder': 'Tytuł SEO (zostaw puste aby użyć tytułu posta)',
     'admin.seoDescriptionPlaceholder': 'Opis SEO (zostaw puste aby użyć streszczenia)',
     'admin.testBackendConnection': 'Testuj Połączenie z Backendem',
-    
+
     // ===== KOMUNIKATY PANELU =====
     'admin.adminAccessRequired': 'Musisz być zalogowany jako administrator, aby uzyskać dostęp do tej strony.',
     'admin.goToLogin': 'Przejdź do Logowania',
@@ -1012,7 +1037,7 @@ export const blogTranslations = {
     'admin.actionCannotBeUndone': 'Ta akcja nie może zostać cofnięta.',
     'admin.postDeletedSuccessfully': 'Post został pomyślnie usunięty',
     'admin.errorDeletingPost': 'Błąd podczas usuwania posta. Spróbuj ponownie.',
-    
+
     // ===== ZARZĄDZANIE JĘZYKAMI =====
     'admin.languageManagement': 'Zarządzanie Językami',
     'admin.languageSettings': 'Ustawienia Języków',
@@ -1064,5 +1089,30 @@ export const blogTranslations = {
     'admin.totalLanguages': 'Języki Łącznie',
     'admin.activeLanguages': 'Aktywne Języki',
     'admin.languagesInUse': 'Języki w Użyciu',
+
+    // ===== STATYSTYKI DASHBOARD =====
+    'admin.totalUsers': 'Użytkownicy',
+    'admin.totalComments': 'Komentarze',
+    'admin.totalLikes': 'Polubienia',
+    'admin.totalReactions': 'Reakcje',
+    'admin.recentUsers': 'Ostatnie Rejestracje',
+    'admin.loading': 'Ładowanie...',
+    'admin.new24h': 'nowych w 24h',
+    'admin.last24h': 'w ostatnich 24h',
+    'admin.last7d': 'w ostatnich 7 dniach',
+    'admin.verified': 'Zweryfikowany',
+    'admin.unverified': 'Niezweryfikowany',
+    'admin.topCommenters': 'Najbardziej Aktywni',
+    'admin.rankProgress': 'Postęp Rangi',
+    'admin.xpToNext': 'XP do następnego poziomu',
+    'admin.reactionsPerPost': 'reakcji',
+
+    // Wymagania hasła w koncie
+    'account.passwordRequirements': 'Hasło musi zawierać:',
+    'account.passwordMinLength': 'Co najmniej 8 znaków',
+    'account.passwordUppercase': 'Jedną wielką literę',
+    'account.passwordLowercase': 'Jedną małą literę',
+    'account.passwordNumber': 'Jedną cyfrę',
+    'account.passwordSpecial': 'Jeden znak specjalny',
   },
 } as const;

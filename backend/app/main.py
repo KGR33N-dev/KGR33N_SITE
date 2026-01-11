@@ -8,7 +8,7 @@ import os
 import asyncio
 from datetime import datetime
 from .database import init_roles_and_ranks
-from .routers import auth, comments, roles, profile
+from .routers import auth, comments, roles, profile, admin
 from .routers import blog
 from .security import limiter, get_current_admin_user, conditional_limit
 from .schemas import ContactForm, ContactResponse
@@ -184,6 +184,7 @@ app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(comments.router, prefix="/api/comments", tags=["comments"])
 app.include_router(roles.router, tags=["roles"])
 app.include_router(profile.router, prefix="/api", tags=["profile"])
+app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 @app.get("/")
 async def root():

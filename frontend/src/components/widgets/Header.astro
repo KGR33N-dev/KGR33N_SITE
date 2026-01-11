@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import SmartLogo from '~/components/SmartLogo.astro';
 import ToggleTheme from '~/components/common/ToggleTheme.astro';
+import ToggleMenu from '~/components/common/ToggleMenu.astro';
 import Button from '~/components/ui/Button.astro';
 import LanguageSwitcher from '~/components/LanguageSwitcher.astro';
 import CVDownload from '~/components/ui/CVDownload.astro';
@@ -83,6 +84,7 @@ const normalizedPath = `/${trimSlash(currentPath)}`;
       <SmartLogo />
       <div class="flex items-center md:hidden">
         <ToggleTheme iconClass="w-6 h-6 md:w-5 md:h-5 md:inline-block" />
+        <ToggleMenu class="ml-2 flex flex-col h-12 w-12 rounded justify-center items-center cursor-pointer group" />
       </div>
     </div>
     <nav

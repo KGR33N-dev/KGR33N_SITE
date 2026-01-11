@@ -14,25 +14,32 @@ export async function getStaticPaths() {
 const { lang } = Astro.params;
 const t = useTranslations(lang as keyof typeof languages);
 
-// Fetch posts from Collection
+// Fetch posts from Collection and filter by language
 const allPosts = await getCollection("blog");
-const sortedPosts = allPosts.sort(
+// Filtrujemy posty dla danego języka na podstawie ścieżki (en/xxx lub pl/xxx)
+const langPosts = allPosts.filter((post) => post.id.startsWith(`${lang}/`));
+const sortedPosts = langPosts.sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
 // Map to UI Post format
 const blogPosts = sortedPosts.map((post) => {
-  let image = post.data.heroImage || "/assets/images/blog/default.png";
+  // Slug bez prefiksu języka
+  const cleanSlug = post.data.slug || post.slug.replace(`${lang}/`, "");
+  let image =
+    post.data.heroImage ||
+    post.data.featured_image ||
+    "/assets/images/blog/default.png";
   return {
-    id: post.slug,
-    slug: post.slug,
+    id: cleanSlug,
+    slug: cleanSlug,
     publishDate: post.data.pubDate,
     title: post.data.title,
     excerpt: post.data.description,
     image: image,
-    permalink: `/${lang}/blog/${post.slug}`,
+    permalink: `/${lang}/blog/${cleanSlug}`,
     author: "KGR33N",
-    tags: [],
+    tags: post.data.tags || [],
     category: { slug: "general", title: "General" },
   };
 });

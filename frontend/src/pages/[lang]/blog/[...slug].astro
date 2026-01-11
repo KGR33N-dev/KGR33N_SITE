@@ -7,15 +7,31 @@ import path from "node:path";
 // Importujemy Twój komponent komentarzy
 import Comments from "~/components/blog/Comments.astro";
 
-// Generowanie ścieżek dla wszystkich postów i języków
+// Generowanie ścieżek dla wszystkich postów z odpowiednich katalogów językowych
 export async function getStaticPaths() {
-  const posts = await getCollection("blog");
-  return Object.keys(languages).flatMap((lang) =>
-    posts.map((post) => ({
-      params: { lang, slug: post.slug },
-      props: { post, lang },
-    })),
-  );
+  const allPosts = await getCollection("blog");
+
+  // Grupujemy posty według języka na podstawie ścieżki (en/xxx lub pl/xxx)
+  const paths = [];
+
+  for (const lang of Object.keys(languages)) {
+    // Filtrujemy posty dla danego języka
+    const langPosts = allPosts.filter((post) => {
+      // Sprawdzamy czy ID posta zaczyna się od en/ lub pl/
+      return post.id.startsWith(`${lang}/`);
+    });
+
+    for (const post of langPosts) {
+      // Slug bez prefiksu języka
+      const slugWithoutLang = post.slug.replace(`${lang}/`, "");
+      paths.push({
+        params: { lang, slug: slugWithoutLang },
+        props: { post, lang },
+      });
+    }
+  }
+
+  return paths;
 }
 
 const { post, lang } = Astro.props;
@@ -24,6 +40,7 @@ const { Content } = await post.render();
 // Funkcja pomocnicza do obrazków
 function getPostImage(postData, slug) {
   if (postData.heroImage) return postData.heroImage;
+  if (postData.featured_image) return postData.featured_image;
   try {
     const extensions = ["jpg", "png", "webp", "jpeg"];
     const publicDir = path.join(process.cwd(), "public");
@@ -38,7 +55,9 @@ function getPostImage(postData, slug) {
   return "/assets/images/blog/default.png";
 }
 
-const heroImage = getPostImage(post.data, post.slug);
+// Slug bez prefiksu języka dla obrazka
+const cleanSlug = post.data.slug || post.slug.replace(`${lang}/`, "");
+const heroImage = getPostImage(post.data, cleanSlug);
 const metadata = {
   title: `${post.data.title} - KGR33N`,
   description: post.data.description,
@@ -86,6 +105,6 @@ const metadata = {
     </div>
 
     <hr class="border-gray-200 dark:border-gray-700 my-12" />
-    <Comments post_slug={post.slug} lang={lang} />
+    <Comments post_slug={cleanSlug} lang={lang} />
   </article>
 </Layout>

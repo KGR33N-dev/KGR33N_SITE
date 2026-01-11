@@ -56,7 +56,8 @@ export class DashboardManager {
       // Load dashboard data once
       await this.loadDashboardData();
 
-
+      // Load admin stats
+      await this.loadStats();
 
       // Check API status
       this.checkAPIStatus();
@@ -134,6 +135,114 @@ export class DashboardManager {
     }
   }
 
+  private async loadStats(): Promise<void> {
+    try {
+      if (this.isDev) console.log('📊 Loading admin stats...');
+
+      const response = await AdminAuth.makeAuthenticatedRequest(
+        API_URLS.stats()
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stats: ${response.status}`);
+      }
+
+      const stats = await response.json();
+
+      if (this.isDev) {
+        console.log('📈 Stats loaded:', stats);
+      }
+
+      // Update stats cards
+      const usersEl = document.getElementById('stat-users');
+      const usersNewEl = document.getElementById('stat-users-new');
+      const postsEl = document.getElementById('stat-posts');
+      const commentsEl = document.getElementById('stat-comments');
+      const commentsNewEl = document.getElementById('stat-comments-new');
+      const likesEl = document.getElementById('stat-likes');
+      const likesNewEl = document.getElementById('stat-likes-new');
+
+      if (usersEl && stats.users) {
+        usersEl.textContent = stats.users.total.toString();
+      }
+      if (usersNewEl && stats.users) {
+        usersNewEl.textContent = `+${stats.users.new_24h} (24h) | ${stats.users.verified} verified`;
+      }
+      if (postsEl && stats.posts) {
+        postsEl.textContent = stats.posts.total.toString();
+      }
+      if (commentsEl && stats.comments) {
+        commentsEl.textContent = stats.comments.total.toString();
+      }
+      if (commentsNewEl && stats.comments) {
+        commentsNewEl.textContent = `+${stats.comments.last_24h} (24h)`;
+      }
+      if (likesEl && stats.reactions) {
+        likesEl.textContent = stats.reactions.total.toString();
+      }
+      if (likesNewEl && stats.reactions) {
+        likesNewEl.textContent = `+${stats.reactions.last_24h} (24h)`;
+      }
+
+      // Update recent users list
+      this.updateRecentUsers(stats.recent_users || []);
+
+    } catch (error) {
+      if (this.isDev) console.error('❌ Failed to load stats:', error);
+      // Stats are optional - don't show error UI
+    }
+  }
+
+  private updateRecentUsers(users: Array<{
+    id: number;
+    username: string;
+    email: string;
+    created_at: string;
+    verified: boolean;
+    rank?: { name: string; level: number; color?: string };
+    reputation_score?: number;
+  }>): void {
+    const container = document.getElementById('recent-users-list');
+    if (!container) return;
+
+    if (users.length === 0) {
+      container.innerHTML = `
+        <p class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">No recent registrations</p>
+      `;
+      return;
+    }
+
+    container.innerHTML = users.map(user => {
+      const rankBadge = user.rank ? `
+        <span class="px-2 py-0.5 text-xs rounded-full" style="background-color: ${user.rank.color || '#6B7280'}20; color: ${user.rank.color || '#6B7280'}">
+          ${user.rank.name} (${user.reputation_score || 0} XP)
+        </span>
+      ` : '';
+
+      return `
+        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">${user.username.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">${user.username}</p>
+                ${rankBadge}
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">${user.email}</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 text-xs rounded-full ${user.verified ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}">
+              ${user.verified ? '✓ Verified' : 'Pending'}
+            </span>
+            <span class="text-xs text-gray-400">${user.created_at ? new Date(user.created_at).toLocaleDateString() : ''}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
 
   private showAllPosts(posts: Post[]): void {

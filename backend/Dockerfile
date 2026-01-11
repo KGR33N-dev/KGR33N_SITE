@@ -49,6 +49,10 @@ COPY --chown=app:app ./app ./app
 COPY --chown=app:app ./alembic ./alembic
 COPY --chown=app:app alembic.ini .
 
+# Copy blog content for sync_posts script (from frontend/src/content/blog)
+# Content is copied during CI/CD build process
+COPY --chown=app:app ./content_blog ./content_blog
+
 # Switch to non-root user
 USER app
 

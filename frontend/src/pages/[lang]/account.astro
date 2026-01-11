@@ -92,7 +92,8 @@ const metadata = {
                 >
                 <div
                   id="user-email-info"
-                  class="py-2 px-3 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                  class="py-2 px-3 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 break-all text-sm"
+                  title=""
                 >
                 </div>
               </div>
@@ -160,6 +161,23 @@ const metadata = {
                   class="py-2 px-3 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                 >
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rank System Card -->
+          <div
+            class="bg-white dark:bg-slate-900 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-6 mt-6"
+          >
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Rank System
+            </h3>
+            <div id="ranks-list-container" class="space-y-3">
+              <!-- Ranks will be injected here -->
+              <div class="animate-pulse space-y-3">
+                <div class="h-10 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                <div class="h-10 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                <div class="h-10 bg-gray-100 dark:bg-gray-800 rounded"></div>
               </div>
             </div>
           </div>
@@ -267,6 +285,69 @@ const metadata = {
                       placeholder={t("account.newPasswordPlaceholder")}
                       required
                     />
+                    <!-- Password Strength Indicator -->
+                    <div id="password-strength-container" class="mt-2 hidden">
+                      <div class="flex items-center space-x-2 mb-1">
+                        <div
+                          class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+                        >
+                          <div
+                            id="password-strength-bar"
+                            class="h-full transition-all duration-300 bg-gray-400"
+                            style="width: 0%"
+                          >
+                          </div>
+                        </div>
+                        <span
+                          id="password-strength-text"
+                          class="text-xs font-medium text-gray-500"></span>
+                      </div>
+                      <ul
+                        id="password-requirements-list"
+                        class="text-xs space-y-1 mt-2"
+                      >
+                        <li
+                          id="req-length"
+                          class="flex items-center text-gray-400"
+                        >
+                          <span class="mr-2">○</span>{
+                            t("account.passwordMinLength")
+                          }
+                        </li>
+                        <li
+                          id="req-uppercase"
+                          class="flex items-center text-gray-400"
+                        >
+                          <span class="mr-2">○</span>{
+                            t("account.passwordUppercase")
+                          }
+                        </li>
+                        <li
+                          id="req-lowercase"
+                          class="flex items-center text-gray-400"
+                        >
+                          <span class="mr-2">○</span>{
+                            t("account.passwordLowercase")
+                          }
+                        </li>
+                        <li
+                          id="req-number"
+                          class="flex items-center text-gray-400"
+                        >
+                          <span class="mr-2">○</span>{
+                            t("account.passwordNumber")
+                          }
+                        </li>
+                        <li
+                          id="req-special"
+                          class="flex items-center text-gray-400"
+                        >
+                          <span class="mr-2">○</span>{
+                            t("account.passwordSpecial")
+                          }
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                   <div>
                     <label
@@ -282,6 +363,12 @@ const metadata = {
                       placeholder={t("account.confirmPasswordPlaceholder")}
                       required
                     />
+                    <p
+                      id="password-match-error"
+                      class="text-xs text-red-500 mt-1 hidden"
+                    >
+                      {t("account.passwordsDoNotMatchError")}
+                    </p>
                   </div>
                 </div>
                 <div class="flex gap-3 mt-6">
@@ -446,6 +533,20 @@ const metadata = {
       return response.json();
     },
 
+    async getRanks() {
+      const response = await fetch(`${this.baseUrl}/profile/ranks`, {
+        cache: "no-store",
+        credentials: "include",
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return response.json();
+    },
+
     async changePassword(currentPassword, newPassword, confirmPassword) {
       const response = await fetch(`${this.baseUrl}/profile/change-password`, {
         method: "PUT",
@@ -592,6 +693,9 @@ const metadata = {
 
       displayUserInfo();
       setupFormHandlers();
+
+      // Load ranks
+      loadRanks();
 
       // Hide loading and show content
       if (loadingStateElement) {
@@ -767,6 +871,175 @@ const metadata = {
           ? "px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200"
           : "px-4 py-2 bg-gray-400 text-gray-700 rounded-lg font-medium cursor-not-allowed opacity-50";
       });
+    }
+
+    // Password strength validation
+    const newPasswordInput = document.getElementById("new-password");
+    const confirmPasswordInput = document.getElementById("confirm-password");
+    const strengthContainer = document.getElementById(
+      "password-strength-container",
+    );
+    const strengthBar = document.getElementById("password-strength-bar");
+    const strengthText = document.getElementById("password-strength-text");
+    const passwordMatchError = document.getElementById("password-match-error");
+
+    if (newPasswordInput && strengthContainer) {
+      newPasswordInput.addEventListener("input", () => {
+        const password = newPasswordInput.value;
+        if (password.length > 0) {
+          strengthContainer.classList.remove("hidden");
+          updatePasswordStrength(password);
+        } else {
+          strengthContainer.classList.add("hidden");
+        }
+      });
+    }
+
+    if (confirmPasswordInput && passwordMatchError) {
+      confirmPasswordInput.addEventListener("input", () => {
+        const password = newPasswordInput?.value || "";
+        const confirm = confirmPasswordInput.value;
+        if (confirm.length > 0 && password !== confirm) {
+          passwordMatchError.classList.remove("hidden");
+        } else {
+          passwordMatchError.classList.add("hidden");
+        }
+      });
+    }
+
+    function updatePasswordStrength(password) {
+      const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      };
+
+      // Update requirement list
+      updateRequirement("req-length", requirements.length);
+      updateRequirement("req-uppercase", requirements.uppercase);
+      updateRequirement("req-lowercase", requirements.lowercase);
+      updateRequirement("req-number", requirements.number);
+      updateRequirement("req-special", requirements.special);
+
+      // Calculate score
+      const score = Object.values(requirements).filter(Boolean).length;
+      const percentage = (score / 5) * 100;
+
+      // Update progress bar
+      if (strengthBar) {
+        strengthBar.style.width = `${percentage}%`;
+        if (score <= 2) {
+          strengthBar.className =
+            "h-full transition-all duration-300 bg-red-500";
+        } else if (score <= 3) {
+          strengthBar.className =
+            "h-full transition-all duration-300 bg-yellow-500";
+        } else if (score <= 4) {
+          strengthBar.className =
+            "h-full transition-all duration-300 bg-blue-500";
+        } else {
+          strengthBar.className =
+            "h-full transition-all duration-300 bg-green-500";
+        }
+      }
+
+      // Update text
+      if (strengthText) {
+        const labels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+        strengthText.textContent = labels[Math.min(score, 4)];
+        strengthText.className = `text-xs font-medium ${
+          score <= 2
+            ? "text-red-500"
+            : score <= 3
+              ? "text-yellow-500"
+              : score <= 4
+                ? "text-blue-500"
+                : "text-green-500"
+        }`;
+      }
+    }
+
+    function updateRequirement(id, met) {
+      const el = document.getElementById(id);
+      if (el) {
+        const span = el.querySelector("span");
+        if (met) {
+          el.className = "flex items-center text-green-500";
+          if (span) span.textContent = "✓";
+        } else {
+          el.className = "flex items-center text-gray-400";
+          if (span) span.textContent = "○";
+        }
+      }
+    }
+  }
+
+  async function loadRanks() {
+    try {
+      if (isDev) console.log("🏆 Loading ranks...");
+      const response = await ProfileService.getRanks();
+      const ranks = response.ranks || [];
+      const container = document.getElementById("ranks-list-container");
+
+      if (!container) return;
+
+      if (ranks.length === 0) {
+        container.innerHTML = `<p class="text-sm text-gray-500">No ranks available</p>`;
+        return;
+      }
+
+      const currentRankId = currentUser?.rank?.id;
+      const currentXp = currentUser?.reputation_score || 0;
+
+      container.innerHTML = ranks
+        .map((rank) => {
+          const isCurrent = rank.id === currentRankId;
+          const xpReq =
+            rank.requirements?.xp !== undefined ? rank.requirements.xp : 0;
+          const isUnlocked = currentXp >= xpReq;
+
+          return `
+          <div class="flex items-center justify-between p-3 rounded-lg border ${
+            isCurrent
+              ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+              : "bg-gray-50 border-transparent dark:bg-gray-800"
+          } ${!isUnlocked ? "opacity-75 grayscale-[0.5]" : ""}">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-700 shadow-sm text-xl border border-gray-100 dark:border-gray-600">
+                ${rank.icon || "❓"}
+              </div>
+              <div>
+                <p class="text-sm font-medium ${isCurrent ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white"}">
+                  ${rank.display_name}
+                  ${isCurrent ? '<span class="ml-2 text-xs font-normal px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">Current</span>' : ""}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  ${rank.description || ""}
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">${xpReq} XP</span>
+              ${
+                isCurrent
+                  ? `<p class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Active</p>`
+                  : isUnlocked
+                    ? `<p class="text-[10px] text-green-600 dark:text-green-400">Unlocked</p>`
+                    : `<p class="text-[10px] text-gray-400">Locked</p>`
+              }
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+    } catch (error) {
+      if (isDev) console.error("❌ Failed to load ranks:", error);
+      const container = document.getElementById("ranks-list-container");
+      if (container) {
+        container.innerHTML = `<p class="text-sm text-red-500">Failed to load list</p>`;
+      }
     }
   }
 

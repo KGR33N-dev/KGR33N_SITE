@@ -118,43 +118,43 @@ def init_roles_and_ranks():
                 db.add(role)
             print("✅ Initialized default roles")
         
-        # 🏆 USER RANKS
+        # 🏆 USER RANKS - XP-based system
         if existing_ranks == 0:
             ranks_data = [
                 {
                     "name": UserRankEnum.NEWBIE,
-                    "display_name": "New User",
+                    "display_name": "Newbie",
                     "description": "Newly registered user",
-                    "icon": "👶",
-                    "color": "#17a2b8",
-                    "requirements": {"comments": 0, "likes": 0},
+                    "icon": "🌱",
+                    "color": "#6c757d",
+                    "requirements": {"xp": 0},
                     "level": 1
                 },
                 {
                     "name": UserRankEnum.REGULAR,
-                    "display_name": "Regular User",
+                    "display_name": "Regular",
                     "description": "Active community member",
                     "icon": "👤",
                     "color": "#28a745",
-                    "requirements": {"comments": 5, "likes": 10},
+                    "requirements": {"xp": 10},
                     "level": 2
                 },
                 {
                     "name": UserRankEnum.TRUSTED,
-                    "display_name": "Trusted User",
+                    "display_name": "Trusted",
                     "description": "Experienced and trusted member",
                     "icon": "🤝",
                     "color": "#007bff",
-                    "requirements": {"comments": 25, "likes": 50},
+                    "requirements": {"xp": 50},
                     "level": 3
                 },
                 {
                     "name": UserRankEnum.STAR,
-                    "display_name": "Community Star",
+                    "display_name": "Star",
                     "description": "Outstanding community member",
                     "icon": "⭐",
                     "color": "#ffc107",
-                    "requirements": {"comments": 100, "likes": 200},
+                    "requirements": {"xp": 150},
                     "level": 4
                 },
                 {
@@ -163,16 +163,16 @@ def init_roles_and_ranks():
                     "description": "Legendary community member",
                     "icon": "🏆",
                     "color": "#6f42c1",
-                    "requirements": {"comments": 500, "likes": 1000},
+                    "requirements": {"xp": 500},
                     "level": 5
                 },
                 {
                     "name": UserRankEnum.VIP,
                     "display_name": "VIP",
-                    "description": "Highest rank - VIP community member",
+                    "description": "Elite VIP member",
                     "icon": "👑",
                     "color": "#fd7e14",
-                    "requirements": {"comments": 1000, "likes": 2000},
+                    "requirements": {"xp": 1000},
                     "level": 6
                 }
             ]

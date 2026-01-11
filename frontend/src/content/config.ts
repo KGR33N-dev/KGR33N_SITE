@@ -9,10 +9,12 @@ const blogCollection = defineCollection({
         slug: z.string().optional(),
         updatedDate: z.date().optional(),
         heroImage: z.string().optional(),
-        id: z.number().optional(),
+        featured_image: z.string().optional(),
+        tags: z.array(z.string()).optional(),
     }),
 });
 
 export const collections = {
     'blog': blogCollection,
 };
+
