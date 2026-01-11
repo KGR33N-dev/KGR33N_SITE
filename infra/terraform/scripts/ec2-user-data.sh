@@ -141,17 +141,28 @@ rm -rf aws awscliv2.zip
 # -----------------------------------------------------------------------------
 # SECRETS MANAGEMENT (Fetch from SSM and create K8s secrets)
 # -----------------------------------------------------------------------------
-echo ">>> Fetching secrets from AWS SSM Parameter Store..."
+echo ">>> Fetching secrets from AWS SSM Parameter Store (with retry)..."
+for i in {1..5}; do
+    echo "Attempt $i/5..."
+    
+    # Get AWS Region
+    REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/.$//')
+    
+    # Fetch parameters
+    DB_PASSWORD=$(aws ssm get-parameter --name "/${project_name}/secrets/db-password" --with-decryption --region $REGION --query "Parameter.Value" --output text || echo "")
+    SECRET_KEY=$(aws ssm get-parameter --name "/${project_name}/secrets/secret-key" --with-decryption --region $REGION --query "Parameter.Value" --output text || echo "")
+    GHCR_TOKEN=$(aws ssm get-parameter --name "/${project_name}/secrets/ghcr-token" --with-decryption --region $REGION --query "Parameter.Value" --output text || echo "")
+    GHCR_USERNAME=$(aws ssm get-parameter --name "/${project_name}/secrets/ghcr-username" --region $REGION --query "Parameter.Value" --output text || echo "")
+    RESEND_API_KEY=$(aws ssm get-parameter --name "/${project_name}/secrets/resend-api-key" --with-decryption --region $REGION --query "Parameter.Value" --output text || echo "")
 
-# Get AWS Region
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/.$//')
-
-# Fetch parameters
-DB_PASSWORD=$(aws ssm get-parameter --name "/${project_name}/secrets/db-password" --with-decryption --region $REGION --query "Parameter.Value" --output text)
-SECRET_KEY=$(aws ssm get-parameter --name "/${project_name}/secrets/secret-key" --with-decryption --region $REGION --query "Parameter.Value" --output text)
-GHCR_TOKEN=$(aws ssm get-parameter --name "/${project_name}/secrets/ghcr-token" --with-decryption --region $REGION --query "Parameter.Value" --output text)
-GHCR_USERNAME=$(aws ssm get-parameter --name "/${project_name}/secrets/ghcr-username" --region $REGION --query "Parameter.Value" --output text)
-RESEND_API_KEY=$(aws ssm get-parameter --name "/${project_name}/secrets/resend-api-key" --with-decryption --region $REGION --query "Parameter.Value" --output text)
+    if [ -n "$DB_PASSWORD" ] && [ -n "$SECRET_KEY" ]; then
+        echo ">>> Secrets fetched successfully!"
+        break
+    else
+        echo ">>> Failed to fetch secrets. Retrying in 10s..."
+        sleep 10
+    fi
+done
 
 echo ">>> Creating K8s namespace and secrets..."
 kubectl create namespace ${project_name} --dry-run=client -o yaml | kubectl apply -f -
@@ -167,15 +178,20 @@ kubectl create secret generic app-secrets \
     --from-literal=resend-api-key="$RESEND_API_KEY" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-# Create ghcr-secret
-kubectl create secret docker-registry ghcr-secret \
-    --namespace ${project_name} \
-    --docker-server=ghcr.io \
-    --docker-username="$GHCR_USERNAME" \
-    --docker-password="$GHCR_TOKEN" \
-    --dry-run=client -o yaml | kubectl apply -f -
+# Create ghcr-secret (Verify creation)
+if [ -n "$GHCR_TOKEN" ] && [ -n "$GHCR_USERNAME" ]; then
+    kubectl create secret docker-registry ghcr-secret \
+        --namespace ${project_name} \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    echo ">>> GHCR Secret created."
+else
+    echo ">>> WARNING: GHCR credentials missing. Skipping ghcr-secret (Public images only)."
+fi
 
-echo ">>> K8s secrets created successfully!"
+echo ">>> K8s secrets setup complete!"
 
 # -----------------------------------------------------------------------------
 # VERIFICATION
