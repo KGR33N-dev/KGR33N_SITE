@@ -11,7 +11,7 @@ resource "random_id" "bucket_suffix" {
 # 1. S3 Bucket
 resource "aws_s3_bucket" "backups" {
   bucket = "${var.project_name}-db-backups-${random_id.bucket_suffix.hex}"
-  
+
   tags = {
     Name        = "${var.project_name}-backups"
     Environment = var.environment
@@ -34,6 +34,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
     id     = "expire-old-backups"
     status = "Enabled"
 
+    filter {} # Required - empty filter means apply to all objects
+
     expiration {
       days = 30
     }
@@ -53,9 +55,9 @@ resource "aws_s3_bucket_public_access_block" "backups" {
 # 2. IAM User for the Backup Script
 resource "aws_iam_user" "backup_user" {
   name = "${var.project_name}-backup-bot"
-  
+
   tags = {
-     Environment = var.environment
+    Environment = var.environment
   }
 }
 
@@ -73,8 +75,8 @@ resource "aws_iam_user_policy" "backup_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "s3:PutObject",
           "s3:GetObject",
           "s3:ListBucket"

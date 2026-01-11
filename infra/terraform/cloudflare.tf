@@ -8,19 +8,18 @@
 resource "cloudflare_record" "root" {
   zone_id = var.cloudflare_zone_id
   name    = "@"
-  value   = aws_eip.k3s_server.public_ip # <-- Uses AWS Elastic IP!
+  content = aws_eip.k3s_server.public_ip # <-- Uses AWS Elastic IP!
   type    = "A"
   ttl     = 1 # Auto (when proxied)
   proxied = var.cloudflare_proxy_enabled
   comment = "Managed by Terraform - points to AWS EC2"
 }
 
-# WWW subdomain - CNAME to root
+# WWW subdomain - A record to EC2 IP
 resource "cloudflare_record" "www" {
   zone_id = var.cloudflare_zone_id
   name    = "www"
-  value   = var.domain
-  value   = aws_eip.k3s_server.public_ip
+  content = aws_eip.k3s_server.public_ip
   type    = "A"
   ttl     = 1
   proxied = var.cloudflare_proxy_enabled
@@ -39,27 +38,23 @@ resource "cloudflare_record" "www" {
 # }
 
 # Cloudflare SSL/TLS Settings
-resource "cloudflare_zone_settings_override" "ssl_settings" {
-  zone_id = var.cloudflare_zone_id
-
-  settings {
-    # SSL Mode: Flexible - Encrypts User<->Cloudflare, but Cloudflare<->Origin is HTTP
-    # Easier to set up as you don't need certs on K3s/EC2
-    ssl                      = "flexible"
-    always_use_https         = "on"
-    automatic_https_rewrites = "on"
-    min_tls_version          = "1.2"
-    
-    # Security
-    security_level = "medium"
-    browser_check  = "on"
-    
-    # Performance
-    minify {
-      css  = "on"
-      js   = "on"
-      html = "on"
-    }
-    brotli = "on"
-  }
-}
+# NOTE: Requires API token with Zone Settings:Edit permission
+# Configure these manually in Cloudflare Dashboard if token doesn't have permissions
+# resource "cloudflare_zone_settings_override" "ssl_settings" {
+#   zone_id = var.cloudflare_zone_id
+#
+#   settings {
+#     ssl                      = "flexible"
+#     always_use_https         = "on"
+#     automatic_https_rewrites = "on"
+#     min_tls_version          = "1.2"
+#     security_level = "medium"
+#     browser_check  = "on"
+#     minify {
+#       css  = "on"
+#       js   = "on"
+#       html = "on"
+#     }
+#     brotli = "on"
+#   }
+# }

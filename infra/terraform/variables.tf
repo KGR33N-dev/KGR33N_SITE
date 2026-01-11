@@ -85,3 +85,37 @@ variable "cloudflare_proxy_enabled" {
   default     = true
 }
 
+# -----------------------------------------------------------------------------
+# APPLICATION SECRETS (stored in AWS SSM Parameter Store)
+# -----------------------------------------------------------------------------
+
+variable "db_password" {
+  description = "PostgreSQL database password"
+  type        = string
+  sensitive   = true
+}
+
+variable "secret_key" {
+  description = "JWT secret key for authentication (64+ chars recommended)"
+  type        = string
+  sensitive   = true
+}
+
+variable "ghcr_username" {
+  description = "GitHub username for container registry"
+  type        = string
+  default     = "KGR33N-dev"
+}
+
+variable "ghcr_token" {
+  description = "GitHub Personal Access Token with read:packages scope"
+  type        = string
+  sensitive   = true
+}
+
+variable "resend_api_key" {
+  description = "Resend API key for sending emails (optional)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
