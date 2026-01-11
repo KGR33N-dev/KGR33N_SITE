@@ -36,6 +36,24 @@ apt-get install -y \
     ufw
 
 # -----------------------------------------------------------------------------
+# SWAP CONFIGURATION (Stability for t3.micro)
+# -----------------------------------------------------------------------------
+echo ">>> Configuring Swap (2GB)..."
+if ! grep -q "swap" /etc/fstab; then
+    fallocate -l 2G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    
+    # Tuning
+    echo 'vm.swappiness=10' >> /etc/sysctl.conf
+    echo 'vm.vfs_cache_pressure=50' >> /etc/sysctl.conf
+    sysctl -p
+    echo ">>> Swap configured successfully"
+fi
+
+# -----------------------------------------------------------------------------
 # FIREWALL SETUP
 # -----------------------------------------------------------------------------
 echo ">>> Configuring firewall..."

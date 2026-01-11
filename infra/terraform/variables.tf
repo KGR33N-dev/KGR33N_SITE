@@ -31,7 +31,7 @@ variable "aws_region" {
 variable "ec2_instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro" # 2 vCPU, 1GB RAM - Free tier eligible!
+  default     = "t3.small" # 2 vCPU, 2GB RAM - Minimal recommendation for K3s prod
   # Options:
   # t3.micro  - 2 vCPU, 1GB RAM  (Free tier, good for small projects)
   # t3.small  - 2 vCPU, 2GB RAM  (If you need more RAM)
