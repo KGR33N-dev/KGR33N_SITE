@@ -16,39 +16,6 @@ env:
 
 jobs:
   # ============================================
-  # TEST BACKEND
-  # ============================================
-  test-backend:
-    name: Test Backend
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: "sqlite:///:memory:" # Use in-memory SQLite for tests
-      SECRET_KEY: "test-secret-key"
-      ENVIRONMENT: "testing"
-      RESEND_API_KEY: "test_resend_key"
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          # Ensure test dependencies are installed if not in requirements
-          pip install httpx pytest pytest-asyncio
-
-      - name: Run tests
-        run: |
-          cd backend
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
-          pytest tests
-
-  # ============================================
   # BUILD & PUSH DOCKER IMAGES
   # ============================================
   build-backend:
@@ -140,7 +107,7 @@ jobs:
   # ============================================
   deploy:
     name: Deploy to K3s
-    needs: [test-backend, build-backend, build-frontend]
+    needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 

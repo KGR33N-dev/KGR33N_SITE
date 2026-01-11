@@ -4,62 +4,74 @@
 name: Terraform
 
 on:
-    push:
-        branches: [main]
-        paths:
-            - "infra/terraform/**"
-    pull_request:
-        branches: [main]
-        paths:
-            - "infra/terraform/**"
+  push:
+    branches: [main]
+    paths:
+      - "infra/terraform/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/terraform/**"
 
 jobs:
-    terraform:
-        name: Terraform Validate
-        runs-on: ubuntu-latest
+  terraform:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
 
-        defaults:
-            run:
-                working-directory: infra/terraform
+    defaults:
+      run:
+        working-directory: infra/terraform
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
-              with:
-                  terraform_version: "1.6.0"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
 
-            - name: Terraform Format Check
-              id: fmt
-              run: terraform fmt -check -recursive
-              continue-on-error: true
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
 
-            - name: Terraform Init
-              id: init
-              run: terraform init -backend=false
+      - name: Create Dummy tfvars
+        run: |
+          cat <<EOF > terraform.auto.tfvars
+          cloudflare_api_token = "dummy_token"
+          cloudflare_zone_id   = "dummy_zone_id"
+          db_password          = "dummy_password"
+          secret_key           = "dummy_secret_key"
+          ghcr_token           = "dummy_token"
+          resend_api_key       = "dummy_key"
+          ssh_public_key       = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDummyKey"
+          EOF
 
-            - name: Terraform Validate
-              id: validate
-              run: terraform validate -no-color
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false
 
-            - name: Comment on PR
-              if: github.event_name == 'pull_request'
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const output = `### Terraform Validation Results
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
 
-                      #### Format Check 🖌 \`${{ steps.fmt.outcome }}\`
-                      #### Initialization ⚙️ \`${{ steps.init.outcome }}\`
-                      #### Validation 🤖 \`${{ steps.validate.outcome }}\`
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `### Terraform Validation Results
 
-                      *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            #### Format Check 🖌 \`${{ steps.fmt.outcome }}\`
+            #### Initialization ⚙️ \`${{ steps.init.outcome }}\`
+            #### Validation 🤖 \`${{ steps.validate.outcome }}\`
 
-                      github.rest.issues.createComment({
-                        issue_number: context.issue.number,
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        body: output
-                      })
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
