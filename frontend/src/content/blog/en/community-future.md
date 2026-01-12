@@ -1,6 +1,6 @@
 ---
 title: "Building a Community: Ranks, Comments & Future Plans"
-description: "Learn about the new community features, the XP-based rank system, and our exciting roadmap including a forum and game jams."
+description: "Learn about the new community features, the XP-based rank system, and my exciting roadmap including a forum and game jams."
 pubDate: 2026-01-12
 heroImage: "/images/blog/community-hero.png"
 tags: ["Community", "Ranks", "Roadmap", "GameDev", "GameJam"]
@@ -19,7 +19,7 @@ You can now leave comments under posts! But it's not just about text – it's ab
 
 ## 🏆 Rank System & XP
 
-We've introduced a gamified progression system to reward active community members. Everything you do earns you **Experience Points (XP)**!
+I've introduced a gamified progression system to reward active community members. Everything you do earns you **Experience Points (XP)**!
 
 ### How to earn XP?
 - **Write a comment**: +2 XP
@@ -34,7 +34,6 @@ As you gain XP, you unlocked new prestige ranks:
 5.  **Legend** (500 XP): Elite status.
 6.  **VIP** (1000 XP): The top of the mountain.
 
-Check your progress on your **[Account Page](/account)**!
 
 ## 🗺️ The Roadmap: What's Next?
 
@@ -52,7 +51,7 @@ As a game development enthusiast, I want to host **KGR33N Game Jams**.
 Imagine a place where we not only talk about code but build and play games together.
 
 ### 🛡️ Security & Privacy
-We are committed to privacy. We use HTTP-only cookies for secure authentication and do not track you across the web.
+I am committed to privacy. I use HTTP-only cookies for secure authentication and do not track you across the web.
 
 ---
 

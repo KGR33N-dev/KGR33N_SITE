@@ -1,6 +1,6 @@
 ---
 title: "Budowanie Społeczności: Rangi, Komentarze i Plany"
-description: "Dowiedz się o nowych funkcjach społecznościowych, systemie rang opartym na XP oraz naszych ekscytujących planach rozwoju, w tym o forum i game jamach."
+description: "Dowiedz się o nowych funkcjach społecznościowych, systemie rang opartym na XP oraz moich ekscytujących planach rozwoju, w tym o forum i game jamach."
 pubDate: 2026-01-12
 heroImage: "/images/blog/community-hero.png"
 tags: ["Społeczność", "Rangi", "Roadmapa", "GameDev", "GameJam"]
@@ -19,7 +19,7 @@ Możecie teraz zostawiać komentarze pod postami! Ale nie chodzi tylko o tekst �
 
 ## 🏆 System Rang i XP
 
-Wprowadziliśmy system gamifikacji, aby nagradzać aktywnych członków społeczności. Wszystko, co robisz, daje Ci **Punkty Doświadczenia (XP)**!
+Wprowadziłem system gamifikacji, aby nagradzać aktywnych członków społeczności. Wszystko, co robisz, daje Ci **Punkty Doświadczenia (XP)**!
 
 ### Jak zdobywać XP?
 - **Napisz komentarz**: +2 XP
@@ -34,7 +34,6 @@ Zdobywając XP, odblokowujesz nowe rangi prestiżu:
 5.  **Legend** (500 XP): Status elitarny.
 6.  **VIP** (1000 XP): Szczyt góry.
 
-Sprawdź swój postęp na stronie **[Konto](/account)**!
 
 ## 🗺️ Roadmapa: Co dalej?
 
@@ -52,7 +51,7 @@ Jako entuzjasta tworzenia gier (Game Dev), chcę organizować **KGR33N Game Jams
 Wyobraźcie sobie miejsce, gdzie nie tylko rozmawiamy o kodzie, ale razem tworzymy i gramy w gry.
 
 ### 🛡️ Bezpieczeństwo i Prywatność
-Dbamy o prywatność. Używamy ciasteczek HTTP-only do bezpiecznego logowania i nie śledzimy Was w sieci.
+Dbam o prywatność. Używam ciasteczek HTTP-only do bezpiecznego logowania i nie śledzę Cię w sieci.
 
 ---
 
